@@ -1,0 +1,26 @@
+# CaseBreaker AI — Backend dependencies
+# Python 3.11+
+
+# API
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# LLM & Embeddings
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langgraph>=0.0.20
+
+# Vector store
+chromadb>=0.4.0
+
+# Scheduler
+apscheduler>=3.10.0
+
+# Data
+pydantic>=2.5.0
+
+# HTTP
+requests>=2.31.0
+
+# Env
+python-dotenv>=1.0.0

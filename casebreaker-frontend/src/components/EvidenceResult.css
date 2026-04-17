@@ -1,0 +1,56 @@
+.evidence-result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.evidence-result {
+  background: linear-gradient(145deg, #1a1612 0%, #14110e 100%);
+  border-radius: 4px;
+  border: 2px solid #8b7355;
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.evidence-result h4 {
+  font-family: "Playfair Display", Georgia, serif;
+  margin: 0 0 0.75rem 0;
+  color: #dbb860;
+  font-weight: 600;
+}
+
+.evidence-desc {
+  color: #e8dcc8;
+  line-height: 1.6;
+  margin: 0 0 0.5rem 0;
+}
+
+.evidence-location {
+  font-size: 0.9rem;
+  color: #8b7355;
+  margin: 0 0 1rem 0;
+}
+
+.evidence-result button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #3d362d;
+  background: #1a1612;
+  color: #c9b896;
+  cursor: pointer;
+  font-family: "Crimson Text", Georgia, serif;
+}
+
+.evidence-result button:hover {
+  border-color: #6b5b3e;
+  color: #dbb860;
+}

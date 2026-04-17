@@ -1,0 +1,253 @@
+================================================================================
+DR. FENN LIP-SYNC DEBUG SESSION - DETAILED SUMMARY
+Date: Thursday, April 16, 2026
+Session ID: 579b81
+Project: CaseBreaker AI (Dr. Fenn character preview)
+Workspace: /Users/vidyacheekuri/Local_Storage/Casebreaker_AI
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+1. STARTING CONTEXT (Baseline Before This Session)
+────────────────────────────────────────────────────────────────────────────────
+
+The "Direct-to-Mouth" pipeline for Dr. Fenn was already in place:
+
+• Tripo AI service (lib/tripoService.ts) generates a character model from a
+  text prompt; Claude Haiku refines the prompt before submission.
+• /api/speak uses ElevenLabs /with-timestamps endpoint and returns audio +
+  characterTimestamps[] + visemeTimeline.
+• /api/tripo-model caches generated GLBs locally in
+  public/models/dr_fenn_tripo.glb to prevent burning API credits.
+• CharacterCanvas.tsx (React Three Fiber) loads the GLB, auto-centers via
+  bounding box, and drives mouth motion from a targetMouthInfluenceRef.
+• Three-tier fallback already wired:
+    (a) morph targets (visemes/mouthOpen/etc.)
+    (b) jaw/mandible bone rotation
+    (c) procedural head/body bob
+
+Current state at session start: Pipeline fully wired, model generation safely
+cached. Problem reported by user: mouth doesn't move when Dr. Fenn speaks.
+
+
+────────────────────────────────────────────────────────────────────────────────
+2. DEBUG MODE ACTIVATED - INSTRUMENTATION STRATEGY
+────────────────────────────────────────────────────────────────────────────────
+
+A runtime logging server was provisioned:
+  Endpoint:  http://127.0.0.1:7646/ingest/6ad1a864-56ce-462c-9062-248741f1b63d
+  Log path:  /Users/vidyacheekuri/Local_Storage/Casebreaker_AI/.cursor/debug-579b81.log
+  Format:    NDJSON (one JSON object per line)
+
+Instead of guessing, instrumentation was injected into:
+  • character-preview/components/CharacterCanvas.tsx
+  • character-preview/app/page.tsx
+
+Each log is tagged with a hypothesisId (H1-H9, N1, F1-F2) so every piece of
+evidence maps to a specific question about the system.
+
+
+────────────────────────────────────────────────────────────────────────────────
+3. HYPOTHESES TESTED
+────────────────────────────────────────────────────────────────────────────────
+
+H1  Wrong model is active at runtime (still brian.glb, not Tripo).
+H2  Morph targets exist but naming doesn't match MOUTH_MORPH_HINTS.
+H3  Model has no usable face rig (morphs/jaw/head).
+H4  Speaking with positive mouth target - does it actually apply?
+H5  Speaking but mouth target stays zero - timing/state mismatch?
+H6  Full model structure: meshCount / skinnedMeshCount / boneCount.
+H7  Does the React speaking state actually flip to true?
+H8  Does ElevenLabs return audio + timestamps + viseme timeline?
+H9  Does the ElevenLabs fetch fall back to speechSynthesis?
+N1  Nuclear dump of every mesh/skinnedMesh with morph metadata.
+F1  Configured rigid-mesh speech fallback (post-fix instrumentation).
+F2  Applied rigid-mesh speech pulse at runtime (post-fix verification).
+
+
+────────────────────────────────────────────────────────────────────────────────
+4. EVIDENCE TIMELINE (from .cursor/debug-579b81.log)
+────────────────────────────────────────────────────────────────────────────────
+
+Run 1 (initial):
+  • H1: activeModelPath successfully flips to /models/dr_fenn_tripo.glb when
+        "Use Tripo" is enabled. Model selection is correct.
+  • H3: Resolved rig strategy says morphMeshCount=0, hasJawBone=false,
+        hasHeadBone=false for Tripo.
+  • No H2 discovery logs emitted (no meshes had a morphTargetDictionary).
+  • Speaking path logs missing - speak cycle was not reproduced cleanly.
+
+  Conclusion: H1 rejected. H3 confirmed (no rig). H2/H4/H5 inconclusive.
+
+Run 2 (speech confirmed):
+  • H6 (brian.glb):   totalMeshCount=5, skinnedMeshCount=5, boneCount=65.
+                      Still morphMeshCount=0 (no visemes either).
+  • H6 (dr_fenn_tripo): totalMeshCount=1, skinnedMeshCount=0, boneCount=0.
+                      Single rigid mesh, no bones, no morphs.
+  • H7: "Speaking state turned true" fired.
+  • H8: ElevenLabs returned hasAudio=true, visemeEventCount=198,
+        characterTimestampCount=592. Timing data is healthy.
+  • H4: Speaking with positive mouth target (mouthTarget=1) fired, but
+        hasMorphTargets=false and hasJawBone=false - nothing to drive.
+  • H5: On first frame of speech, target was still 0 (ramp from state).
+
+  Conclusion: Speech pipeline works. Tripo model has no face rig.
+
+Run 3 (post-fix rigid-mesh fallback applied):
+  • F1: Configured rigid mesh speech fallback, fallbackMeshCount=1.
+  • F2: Applied rigid mesh speech pulse at mouthTarget=1.
+  • Code path is executing, but scale-based pulse was too subtle to see.
+
+  Fix applied: amplified pulse + body beat/tilt + faster lerp.
+
+Run 4 (nuclear dump after deep-rig discovery):
+  • N1 for brian.glb: 5 SkinnedMeshes
+        Ch01_Body, Ch01_Shirt, Ch01_Eyelashes, Ch01_Sneakers, Ch01_Pants
+        Every one:  hasMorphs=false, morphKeys=[], geometryMorphAttribCount=0.
+  • N1 for dr_fenn_tripo.glb: 1 node
+        name: "tripo_node_bc9d3e02-c774-417c-984b-62c237d48058"
+        type: "Mesh" (NOT SkinnedMesh)
+        hasMorphs=false, morphKeys=[], geometryMorphAttribCount=0,
+        isSkinnedMesh=false
+
+  Definitive conclusion: The cached Tripo GLB is a pure rigid mesh. There
+  are no morph targets hidden, no skinned mesh hiding a face, no geometry
+  morph attributes. You cannot drive lip sync on a file that has no lip
+  data.
+
+
+────────────────────────────────────────────────────────────────────────────────
+5. ROOT CAUSE (Proven by Runtime Evidence)
+────────────────────────────────────────────────────────────────────────────────
+
+The Tripo v3.0 text_to_model task, as originally submitted, produced a
+single-mesh rigid GLB with no facial blendshapes, no skeleton, no jaw bone,
+no head bone. The lip-sync engine had nothing to bind to on this asset.
+
+Brian.glb (the non-Tripo fallback model) has a skeleton but no blendshapes
+and no jaw bone, so it also cannot produce true lip motion - only the
+procedural body/head bob fallback.
+
+
+────────────────────────────────────────────────────────────────────────────────
+6. CODE CHANGES MADE THIS SESSION
+────────────────────────────────────────────────────────────────────────────────
+
+A) components/CharacterCanvas.tsx
+   - Added instrumentation logs (H2, H3, H4, H5, H6) to capture morph
+     dictionaries, rig-strategy selection, and per-frame speech state.
+   - Added discovery useEffect ("DEEP RIG ANALYSIS FOR DR. FENN") that
+     traverses the scene on load and logs every mesh name and its morph
+     keys to the browser console.
+   - Added "nuclear" dump useEffect that also logs every Mesh and
+     SkinnedMesh (including ones without a morph dictionary), with
+     geometry.morphAttributes count, to the runtime server (N1).
+   - Added rigid-mesh speech fallback:
+         rigidMeshSpeechFallbackRef stores baseScale{X,Y,Z} per mesh.
+         On speech, mesh scale is pulsed via lerp from mouthTarget,
+         combined with a faster body beat/tilt when no rig exists.
+     Logged via F1 (setup) and F2 (apply).
+
+B) app/page.tsx
+   - Added H1 instrumentation on activeModelPath/useGeneratedModel/tripoStatus.
+   - Added H7 instrumentation for speaking state transitions.
+   - Added H8 (ElevenLabs payload received) and H9 (fallback to browser
+     speechSynthesis) instrumentation inside the speakText pipeline.
+   - Extended generateTripoModel(forceRegenerate?: boolean):
+         when forceRegenerate=true, calls /api/tripo-model?regenerate=1
+         with cache:"no-store" and appends a cache-busting ?v=timestamp
+         to the returned modelUrl so the browser reloads the fresh file.
+
+C) lib/tripoService.ts
+   - Added face_rig: true and workflow: "animation" to the text_to_model
+     payload alongside quad: true (per Tripo v3.0 rigging requirements).
+   - Replaced the single model_version fallback with a progressive retry
+     chain that strips one optional flag at a time only if the Tripo API
+     rejects it with an invalid/unknown/not allowed/unsupported message:
+         1. full payload  (v3.0 + quad + face_rig + workflow)
+         2. drop workflow
+         3. drop face_rig + workflow
+         4. drop model_version only
+         5. minimal (no version/face_rig/workflow)
+     This ensures we try the most capable rigged request first and only
+     degrade when the API forces it.
+
+
+────────────────────────────────────────────────────────────────────────────────
+7. WHY THE FIX ISN'T VISIBLE YET
+────────────────────────────────────────────────────────────────────────────────
+
+The API route (app/api/tripo-model/route.ts) short-circuits to the cached
+public/models/dr_fenn_tripo.glb whenever it exists. The "Load/Generate
+Dr. Fenn" button hits the API without ?regenerate=1, so it keeps serving
+the OLD rigid GLB. Every N1 nuclear dump has shown the identical node UUID
+(tripo_node_bc9d3e02-c774-417c-984b-62c237d48058), proving the cache was
+never invalidated.
+
+The new face_rig/workflow params in tripoService.ts are real and wired,
+but they only take effect when a true regenerate is triggered. Options:
+  1. Delete character-preview/public/models/dr_fenn_tripo.glb manually,
+     then click Load/Generate.
+  2. Run `npm run seed:dr-fenn` from character-preview/ (it passes
+     ?regenerate=1 and re-downloads the fresh GLB).
+  3. Wire a "Force Regenerate" button (in progress - generateTripoModel
+     already accepts a forceRegenerate arg, just needs a UI trigger).
+
+
+────────────────────────────────────────────────────────────────────────────────
+8. NEXT STEPS (Pick One)
+────────────────────────────────────────────────────────────────────────────────
+
+A) Force fresh Tripo generation with face_rig=true, workflow="animation".
+   If the new GLB returns with morph keys (e.g., mouthOpen, jawOpen,
+   viseme_AA), the existing pickMouthMorphIndices() should auto-match and
+   drive lip sync with no further code. If morph keys use unusual names,
+   update MOUTH_MORPH_HINTS or wire exact keys from the N1 dump.
+
+B) If Tripo still returns a rigid mesh even with the new flags, add a
+   follow-up /task type "animate_rig" call in tripoService.ts (similar
+   to the existing convert_model step). Tripo's facial-rig pipeline is
+   sometimes a second task, not an inline flag.
+
+C) If Tripo cannot produce blendshapes reliably, swap to a pre-rigged
+   humanoid base (Ready Player Me, Mixamo, or an asset with known
+   ARKit/Oculus visemes) and reuse Tripo only for style references.
+
+D) Keep the rigid Tripo mesh and drive lip-sync via shader-based jaw
+   deformation around the head region. Workable but lower quality.
+
+
+────────────────────────────────────────────────────────────────────────────────
+9. FILES TOUCHED
+────────────────────────────────────────────────────────────────────────────────
+
+Modified:
+  character-preview/components/CharacterCanvas.tsx
+  character-preview/app/page.tsx
+  character-preview/lib/tripoService.ts
+
+Read / referenced:
+  character-preview/app/api/tripo-model/route.ts
+  character-preview/scripts/seed-dr-fenn-model.mjs
+  character-preview/lib/character-pipeline.ts (types only)
+  character-preview/components/Character.tsx (legacy shim)
+
+Runtime log (live debug stream):
+  .cursor/debug-579b81.log
+
+
+────────────────────────────────────────────────────────────────────────────────
+10. INSTRUMENTATION STATUS
+────────────────────────────────────────────────────────────────────────────────
+
+All debug instrumentation (H1-H9, N1, F1, F2) is STILL ACTIVE inside the
+code, wrapped in "// #region agent log" ... "// #endregion" blocks so the
+editor folds them by default. This is intentional - they remain in place
+for post-fix verification and were never removed. Once the new rigged
+model is confirmed working end-to-end, these regions can be removed in a
+single cleanup pass.
+
+
+================================================================================
+END OF SUMMARY
+================================================================================

@@ -1,0 +1,80 @@
+.case-brief {
+  background: linear-gradient(145deg, #1a1612 0%, #14110e 100%);
+  border: 2px solid #8b7355;
+  border-radius: 4px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(219, 184, 96, 0.15);
+  position: relative;
+}
+
+.case-brief::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(219, 184, 96, 0.3),
+    transparent
+  );
+  border-radius: 4px 4px 0 0;
+}
+
+.case-brief-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(139, 115, 85, 0.4);
+}
+
+.case-brief-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #dbb860;
+  margin: 0;
+  letter-spacing: 0.08em;
+}
+
+.case-brief-date {
+  font-size: 0.9rem;
+  color: #8b7355;
+  letter-spacing: 0.05em;
+}
+
+.case-brief-content {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+}
+
+.case-brief-row {
+  display: contents;
+}
+
+.case-brief-row .case-brief-label {
+  font-size: 0.85rem;
+  color: #8b7355;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.case-brief-row .case-brief-value {
+  font-size: 1rem;
+  color: #e8dcc8;
+}
+
+.case-brief-victim .case-brief-value,
+.case-brief-cause .case-brief-value {
+  font-weight: 600;
+  color: #dbb860;
+}

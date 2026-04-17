@@ -1,0 +1,106 @@
+.accuse-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.accuse-modal {
+  background: linear-gradient(145deg, #1a1612 0%, #14110e 100%);
+  border-radius: 4px;
+  border: 2px solid #8b7355;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.accuse-modal h3 {
+  font-family: "Playfair Display", Georgia, serif;
+  margin: 0 0 0.5rem 0;
+  color: #dbb860;
+  font-weight: 600;
+}
+
+.accuse-hint {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  color: #8b7355;
+}
+
+.accuse-select,
+.accuse-reasoning {
+  margin-bottom: 1rem;
+}
+
+.accuse-select label,
+.accuse-reasoning label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: #c9b896;
+}
+
+.accuse-select select {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #3d362d;
+  background: #0d0b09;
+  color: #e8dcc8;
+  font-size: 1rem;
+  font-family: "Crimson Text", Georgia, serif;
+}
+
+.accuse-reasoning textarea {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #3d362d;
+  background: #0d0b09;
+  color: #e8dcc8;
+  font-size: 0.95rem;
+  font-family: "Crimson Text", Georgia, serif;
+  resize: vertical;
+}
+
+.accuse-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.accuse-actions button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  border: 1px solid #3d362d;
+  background: #1a1612;
+  color: #c9b896;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: "Crimson Text", Georgia, serif;
+}
+
+.accuse-actions button.accuse-submit {
+  background: #2c261f;
+  border-color: #6b5b3e;
+  color: #dbb860;
+}
+
+.accuse-actions button:hover:not(:disabled) {
+  background: #2c261f;
+  border-color: #6b5b3e;
+}
+
+.accuse-actions button.accuse-submit:hover:not(:disabled) {
+  background: #3d362d;
+  border-color: #8b7355;
+}
+
+.accuse-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

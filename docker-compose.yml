@@ -1,0 +1,14 @@
+# CaseBreaker AI — V1 deployment
+# Single service: FastAPI backend (no DB, no GPU)
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    env_file:
+      - .env
