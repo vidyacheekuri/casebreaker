@@ -1,6 +1,6 @@
 # CaseBreaker AI
 
-An AI-driven murder-mystery game where you interrogate suspects in real time. A multi-agent backend generates a fresh, self-consistent case daily; a conversational frontend lets you question characters whose memory, alibis, and emotional state are simulated by an LLM.
+An AI-driven mystery game where you interrogate suspects in real time. A multi-agent backend generates a fresh, self-consistent case daily; a conversational frontend lets you question characters whose memory, alibis, and emotional state are simulated by an LLM.
 
 Right now the repo contains three parallel efforts:
 
