@@ -1,11 +1,32 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/lib/store";
 import { getSuspect, HARLOW_MANOR } from "@/lib/cases/harlow-manor";
 import type { SuspectId, EvidenceId } from "@/lib/cases/harlow-manor";
 import type { Message } from "@/lib/store";
+import SpeakingAura from "@/components/characters/SpeakingAura";
+
+// Canvas must be client-only (WebGL can't run in SSR)
+const AvatarCanvas = dynamic(() => import("@/components/characters/AvatarCanvas"), { ssr: false });
+
+// Suspect name + status overlay shown below the 3D canvas
+function SuspectLabel({ suspectId, stressed }: { suspectId: SuspectId; stressed: boolean }) {
+  const suspect = getSuspect(suspectId);
+  return (
+    <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-5 pointer-events-none" style={{ zIndex: 20 }}>
+      <div className="text-sm font-semibold tracking-[2px] uppercase text-[#E8E0D0]" style={{ fontFamily: "Georgia, serif" }}>
+        {suspect.name}
+      </div>
+      <div className="text-[10px] text-[#D4A843] mt-1 tracking-wider">
+        {stressed ? "Visibly tense" : "Composed"}
+      </div>
+      <div className="text-[9px] text-[#445566] mt-0.5 italic">{suspect.occupation}</div>
+    </div>
+  );
+}
 
 const SUGGESTED_QUESTIONS: Record<SuspectId, string[]> = {
   fenn: [
@@ -28,58 +49,6 @@ const SUGGESTED_QUESTIONS: Record<SuspectId, string[]> = {
   ],
 };
 
-function SuspectPortrait({ suspectId, stressed }: { suspectId: SuspectId; stressed: boolean }) {
-  const suspect = getSuspect(suspectId);
-  const colors: Record<SuspectId, string> = {
-    fenn: "#4A6670",
-    victoria: "#6B4A5A",
-    oliver: "#4A5A6B",
-  };
-
-  return (
-    <div className="relative flex flex-col items-center justify-end h-full pb-6">
-      {/* Spotlight */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: stressed
-            ? "radial-gradient(ellipse at 50% 30%, rgba(200,80,40,.1) 0%, transparent 65%)"
-            : "radial-gradient(ellipse at 50% 30%, rgba(255,248,200,.05) 0%, transparent 65%)",
-        }}
-      />
-
-      {/* Silhouette */}
-      <div
-        className="relative flex flex-col items-center justify-center rounded-full mb-4"
-        style={{
-          width: 140,
-          height: 140,
-          background: `radial-gradient(circle at 40% 40%, ${colors[suspectId]}44, ${colors[suspectId]}22)`,
-          border: `1px solid ${colors[suspectId]}44`,
-        }}
-      >
-        <div
-          className="text-3xl font-bold tracking-wider"
-          style={{ color: colors[suspectId], fontFamily: "Georgia, serif", opacity: 0.7 }}
-        >
-          {suspect.portrait}
-        </div>
-      </div>
-
-      {/* Name + status */}
-      <div className="text-center z-10">
-        <div className="text-sm font-semibold tracking-[2px] uppercase text-[#E8E0D0]"
-          style={{ fontFamily: "Georgia, serif" }}>
-          {suspect.name}
-        </div>
-        <div className="text-[10px] text-[#D4A843] mt-1 tracking-wider">
-          {stressed ? "Visibly tense" : "Composed"}
-        </div>
-        <div className="text-[9px] text-[#445566] mt-0.5 italic">{suspect.occupation}</div>
-      </div>
-    </div>
-  );
-}
 
 export default function InterrogationRoom() {
   const {
@@ -254,20 +223,27 @@ export default function InterrogationRoom() {
       </div>
 
       <div className="flex flex-1 min-h-0">
-        {/* Character panel */}
-        <div className="relative w-[36%] flex-shrink-0 h-full border-r border-white/5">
-          <SuspectPortrait suspectId={selectedSuspect} stressed={stressed} />
-          {speaking && (
-            <div className="absolute top-4 right-4 flex gap-1 items-end">
-              {[4, 7, 5, 8, 4].map((h, i) => (
-                <div
-                  key={i}
-                  className="w-0.5 rounded-full bg-[#D4A843]"
-                  style={{ height: h, animation: `bounce ${0.4 + i * 0.1}s ease-in-out infinite alternate` }}
-                />
-              ))}
-            </div>
-          )}
+        {/* Character panel — 3D model + aura */}
+        <div className="relative w-[36%] flex-shrink-0 h-full border-r border-white/5 overflow-hidden">
+          {/* Subtle spotlight vignette behind model */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: stressed
+                ? "radial-gradient(ellipse at 50% 30%, rgba(200,80,40,.08) 0%, transparent 65%)"
+                : "radial-gradient(ellipse at 50% 30%, rgba(255,248,200,.04) 0%, transparent 65%)",
+              zIndex: 5,
+            }}
+          />
+
+          {/* 3D canvas */}
+          <AvatarCanvas suspectId={selectedSuspect} speaking={speaking} />
+
+          {/* Sound-wave aura overlay */}
+          <SpeakingAura speaking={speaking} />
+
+          {/* Name / status label */}
+          <SuspectLabel suspectId={selectedSuspect} stressed={stressed} />
         </div>
 
         {/* Dialogue panel */}

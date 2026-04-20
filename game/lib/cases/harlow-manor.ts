@@ -12,6 +12,8 @@ export interface Suspect {
   isKiller: boolean;
   voiceId: string;
   portrait: string;
+  /** Tripo AI generation prompt — used by scripts/generate-characters.mjs */
+  appearance: string;
 }
 
 export interface Evidence {
@@ -70,6 +72,7 @@ export const HARLOW_MANOR: Case = {
       isKiller: false,
       voiceId: "pNInz6obpgDQGcFmaJgB",
       portrait: "JF",
+      appearance: "Realistic 48-year-old British male physician, 1920s England. Wire-rimmed round spectacles, dark charcoal three-piece suit, white dress shirt, dark burgundy tie. Short salt-and-pepper hair, slight stubble. Tired but sharp eyes. Formal upright posture. Neutral T-pose, full body, clean topology.",
     },
     {
       id: "victoria",
@@ -81,6 +84,7 @@ export const HARLOW_MANOR: Case = {
       isKiller: true,
       voiceId: "ThT5KcBeYPX3keUQqHPh",
       portrait: "VH",
+      appearance: "Elegant 42-year-old British aristocratic woman, 1920s England. Dark silk evening dress with lace collar, pearl necklace, hair pinned up neatly. High cheekbones, pale skin, cold composed expression. Arms hanging straight down at sides, hands relaxed with fingers together. Perfectly upright Edwardian posture. Neutral T-pose, full body, clean topology.",
     },
     {
       id: "oliver",
@@ -92,6 +96,7 @@ export const HARLOW_MANOR: Case = {
       isKiller: false,
       voiceId: "TxGEqnHWrfWFTfGW9XjX",
       portrait: "OH",
+      appearance: "Anxious 28-year-old British young man, 1920s England. Slightly disheveled dark wool suit, loosened tie, rumpled white shirt. Short dark hair, nervous wide eyes, lean build. Tense restless posture, shoulders slightly hunched. Neutral T-pose, full body, clean topology.",
     },
   ],
   evidence: [

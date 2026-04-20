@@ -46,7 +46,15 @@ function buildFallbackTimestamps(text: string, durationMs: number): CharacterTim
 
 async function elevenlabs(text: string, voiceId: string) {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) { console.error("[ELEVENLABS ERROR] ELEVENLABS_API_KEY is not set"); return null; }
+
+  if (!voiceId || !text?.trim()) {
+    console.error(`[ELEVENLABS ERROR] Missing Voice ID or Text — voiceId="${voiceId}" textLen=${text?.length ?? 0}`);
+    return null;
+  }
+
+  console.log(`[ELEVENLABS] Calling voiceId="${voiceId}" textLen=${text.length}`);
+
   try {
     const res = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/with-timestamps`,
@@ -60,16 +68,22 @@ async function elevenlabs(text: string, voiceId: string) {
         }),
       }
     );
-    if (!res.ok) { console.warn("ElevenLabs", res.status); return null; }
+
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`[ELEVENLABS ERROR] HTTP ${res.status} for voiceId="${voiceId}": ${body}`);
+      return null;
+    }
+
     const data = await res.json() as { audio_base64?: string; alignment?: ElevenLabsAlignment; normalized_alignment?: ElevenLabsAlignment };
-    if (!data.audio_base64) return null;
+    if (!data.audio_base64) { console.error("[ELEVENLABS ERROR] Response missing audio_base64"); return null; }
     const ts = parseElevenLabsTimestamps(data.alignment ?? data.normalized_alignment);
     return {
       audio: data.audio_base64,
       characterTimestamps: ts.length > 0 ? ts : buildFallbackTimestamps(text, text.length * 80),
       provider: "elevenlabs",
     };
-  } catch (e) { console.warn("ElevenLabs error:", e); return null; }
+  } catch (e) { console.error("[ELEVENLABS ERROR] Network/parse error:", e); return null; }
 }
 
 async function polly(text: string) {
@@ -94,7 +108,11 @@ async function polly(text: string) {
 
 export async function POST(req: Request) {
   try {
-    const { text, voiceId = FALLBACK_VOICE_ID } = await req.json() as { text: string; voiceId?: string };
+    const body = await req.json() as { text: string; voiceId?: string };
+    const { text, voiceId = FALLBACK_VOICE_ID } = body;
+
+    console.log(`[SPEAK] voiceId="${voiceId}" textLen=${text?.length ?? 0} (raw voiceId from client: "${body.voiceId}")`);
+
     if (!text?.trim()) return new Response(JSON.stringify({ error: "text required" }), { status: 400 });
 
     const result = (await elevenlabs(text, voiceId)) ?? (await polly(text));
