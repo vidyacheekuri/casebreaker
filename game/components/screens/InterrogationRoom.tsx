@@ -2,11 +2,18 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { interrogateSession } from "@/lib/backend-client";
 import { useGameStore } from "@/lib/store";
 import type { DetectiveInstinctDto, SuspectDto } from "@/lib/backend-types";
 import SpeakingAura from "@/components/characters/SpeakingAura";
+import EvidenceBoard from "@/components/ui/EvidenceBoard";
+import {
+  approxVisemeTimelineFromText,
+  buildCharacterTimestampsFromText,
+  type CharacterTimestampRange,
+  type VisemeTimeline,
+} from "@/lib/character/character-pipeline";
 
 const AvatarCanvas = dynamic(() => import("@/components/characters/AvatarCanvas"), { ssr: false });
 
@@ -76,6 +83,7 @@ export default function InterrogationRoom() {
     interrogationHistories,
     addMessages,
     increaseStress,
+    selectedEvidenceIds,
   } = useGameStore();
 
   const [input, setInput] = useState("");
@@ -83,10 +91,21 @@ export default function InterrogationRoom() {
   const [displayText, setDisplayText] = useState("");
   const [speaking, setSpeaking] = useState(false);
   const [instinct, setInstinct] = useState<DetectiveInstinctDto | null>(null);
+  const [characterTimestamps, setCharacterTimestamps] = useState<CharacterTimestampRange[] | null>(null);
+  const [visemeTimeline, setVisemeTimeline] = useState<VisemeTimeline | null>(null);
+  const [speechElapsedMs, setSpeechElapsedMs] = useState(0);
+  const [spokenSubtitle, setSpokenSubtitle] = useState<{
+    speaker: string;
+    text: string;
+    durationMs: number;
+  } | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioEnabled = useRef(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speechFrameRef = useRef<number | null>(null);
+  const speechStartRef = useRef<number | null>(null);
 
   const suspect =
     activeSlot && selectedSuspectId
@@ -98,6 +117,19 @@ export default function InterrogationRoom() {
   );
   const stress = selectedSuspectId ? suspectStress[selectedSuspectId] ?? 0 : 0;
   const stressed = stress >= 40;
+  const selectedEvidence = useMemo(() => {
+    if (!activeSlot) return [];
+    return activeSlot.evidence.filter((item) => selectedEvidenceIds.includes(item.evidence_id));
+  }, [activeSlot, selectedEvidenceIds]);
+  const contradictoryEvidence = useMemo(() => {
+    if (!suspect) return [];
+    const suspectTokens = [suspect.character_id, suspect.name]
+      .map((value) => value.toLowerCase())
+      .filter(Boolean);
+    return selectedEvidence.filter((item) =>
+      suspectTokens.some((token) => item.implicates.toLowerCase().includes(token))
+    );
+  }, [selectedEvidence, suspect]);
 
   useEffect(() => {
     if (!sessionId || !activeSlot) {
@@ -114,14 +146,68 @@ export default function InterrogationRoom() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, displayText, instinct]);
 
+  const stopSpeechClock = useCallback(() => {
+    if (speechFrameRef.current != null) {
+      window.cancelAnimationFrame(speechFrameRef.current);
+      speechFrameRef.current = null;
+    }
+    speechStartRef.current = null;
+    setSpeechElapsedMs(0);
+  }, []);
+
+  const startSpeechClock = useCallback(() => {
+    stopSpeechClock();
+    const startedAt = performance.now();
+    speechStartRef.current = startedAt;
+
+    const tick = () => {
+      if (speechStartRef.current == null) return;
+      setSpeechElapsedMs(Math.max(0, performance.now() - speechStartRef.current));
+      speechFrameRef.current = window.requestAnimationFrame(tick);
+    };
+
+    speechFrameRef.current = window.requestAnimationFrame(tick);
+  }, [stopSpeechClock]);
+
+  const finalizeSpeechPlayback = useCallback(() => {
+    stopSpeechClock();
+    audioRef.current = null;
+    setSpeaking(false);
+    setSpokenSubtitle(null);
+  }, [stopSpeechClock]);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      finalizeSpeechPlayback();
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [finalizeSpeechPlayback]);
+
   const speakText = useCallback(
     async (text: string) => {
       if (!audioEnabled.current || !text.trim()) {
         return;
       }
 
+      audioRef.current?.pause();
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+
       setSpeaking(true);
-      const timeout = window.setTimeout(() => setSpeaking(false), Math.max(9000, text.length * 80));
+      const fallbackTimeline = approxVisemeTimelineFromText(text, "local-fallback");
+      const fallbackTimestamps = buildCharacterTimestampsFromText(text, fallbackTimeline.durationMs);
+      setCharacterTimestamps(fallbackTimestamps);
+      setVisemeTimeline(fallbackTimeline);
+      setSpokenSubtitle({
+        speaker: suspect?.name ?? "Suspect",
+        text,
+        durationMs: Math.max(1600, Math.min(12000, fallbackTimeline.durationMs)),
+      });
+      const timeout = window.setTimeout(() => finalizeSpeechPlayback(), Math.max(9000, text.length * 80));
 
       try {
         const response = await fetch("/api/speak", {
@@ -134,38 +220,50 @@ export default function InterrogationRoom() {
           throw new Error("speak unavailable");
         }
 
-        const payload = (await response.json()) as { audio?: string };
+        const payload = (await response.json()) as {
+          audio?: string;
+          characterTimestamps?: CharacterTimestampRange[];
+          visemeTimeline?: VisemeTimeline | null;
+        };
         if (!payload.audio) {
           throw new Error("missing audio");
         }
 
+        setCharacterTimestamps(payload.characterTimestamps?.length ? payload.characterTimestamps : fallbackTimestamps);
+        setVisemeTimeline(payload.visemeTimeline ?? fallbackTimeline);
+        startSpeechClock();
+
         const audio = new Audio(`data:audio/mpeg;base64,${payload.audio}`);
+        audioRef.current = audio;
         audio.onended = () => {
           window.clearTimeout(timeout);
-          setSpeaking(false);
+          finalizeSpeechPlayback();
         };
         audio.onerror = () => {
           window.clearTimeout(timeout);
-          setSpeaking(false);
+          finalizeSpeechPlayback();
         };
 
         await audio.play();
       } catch {
+        setCharacterTimestamps(fallbackTimestamps);
+        setVisemeTimeline(fallbackTimeline);
+        startSpeechClock();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.92;
         utterance.pitch = 0.9;
         utterance.onend = () => {
           window.clearTimeout(timeout);
-          setSpeaking(false);
+          finalizeSpeechPlayback();
         };
         utterance.onerror = () => {
           window.clearTimeout(timeout);
-          setSpeaking(false);
+          finalizeSpeechPlayback();
         };
         window.speechSynthesis.speak(utterance);
       }
     },
-    [suspect]
+    [finalizeSpeechPlayback, startSpeechClock, suspect]
   );
 
   const sendMessage = useCallback(async () => {
@@ -185,9 +283,19 @@ export default function InterrogationRoom() {
     setInstinct(null);
 
     try {
+      const evidenceContext =
+        contradictoryEvidence.length > 0
+          ? `\n\n[Detective note: The player has selected evidence that points at this suspect: ${contradictoryEvidence
+              .map((item) => item.name)
+              .join(", ")}. Let the pressure show in the reply through hesitation, defensiveness, or over-explanation.]`
+          : selectedEvidence.length > 0
+            ? `\n\n[Detective note: The player has selected evidence: ${selectedEvidence
+                .map((item) => item.name)
+                .join(", ")}. Acknowledge relevant details naturally if asked.]`
+            : "";
       const response = await interrogateSession(sessionId, {
         character_id: selectedSuspectId,
-        message: text,
+        message: `${text}${evidenceContext}`,
       });
 
       increaseStress(selectedSuspectId, stressImpactFromTone(response.tone));
@@ -207,7 +315,7 @@ export default function InterrogationRoom() {
       void speakText(response.reply);
     } catch {
       setDisplayText("");
-      setSpeaking(false);
+      finalizeSpeechPlayback();
       addMessages(selectedSuspectId, [
         {
           role: "assistant",
@@ -228,7 +336,22 @@ export default function InterrogationRoom() {
     selectedSuspectId,
     suspect,
     speakText,
+    selectedEvidence,
+    contradictoryEvidence,
+    finalizeSpeechPlayback,
   ]);
+
+  const revealedSubtitle = useMemo(() => {
+    if (!spokenSubtitle) return "";
+    const rawProgress =
+      spokenSubtitle.durationMs > 0 ? Math.min(1, speechElapsedMs / spokenSubtitle.durationMs) : 1;
+    const easedProgress = 1 - Math.pow(1 - rawProgress, 1.8);
+    const visibleChars = Math.min(
+      spokenSubtitle.text.length,
+      Math.max(speaking ? 1 : 0, Math.ceil(spokenSubtitle.text.length * easedProgress))
+    );
+    return spokenSubtitle.text.slice(0, visibleChars);
+  }, [spokenSubtitle, speechElapsedMs, speaking]);
 
   if (!sessionId || !activeSlot || !selectedSuspectId || !suspect) {
     return null;
@@ -288,15 +411,45 @@ export default function InterrogationRoom() {
           />
           <AvatarCanvas
             speaking={speaking}
+            stressed={stressed}
             modelPath={suspect.model_path}
             modelUrl={suspect.model_url}
+            characterTimestamps={characterTimestamps}
+            visemeTimeline={visemeTimeline}
+            speechElapsedMs={speechElapsedMs}
           />
           <SpeakingAura speaking={speaking} />
+          <AnimatePresence>
+            {spokenSubtitle ? (
+              <motion.div
+                className="pointer-events-none absolute bottom-[76px] left-4 right-4 z-20 rounded-lg border border-[#D4A843]/25 bg-[#050A12]/90 px-3 py-2 shadow-[0_18px_50px_rgba(0,0,0,.45)] backdrop-blur-sm"
+                initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                transition={{ duration: 0.22 }}
+              >
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <div className="text-[9px] uppercase tracking-[2.4px] text-[#D4A843]">
+                    {spokenSubtitle.speaker}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[8px] uppercase tracking-[1.6px] text-[#6F7E91]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#D4A843] shadow-[0_0_10px_rgba(212,168,67,.75)]" />
+                    Live Statement
+                  </div>
+                </div>
+                <p className="min-h-[32px] text-[11px] leading-relaxed text-[#DDE4EE]" style={{ fontFamily: "Georgia, serif" }}>
+                  {revealedSubtitle}
+                  {speaking ? <span className="ml-0.5 inline-block h-3 w-px animate-pulse align-middle bg-[#DDE4EE]" /> : null}
+                </p>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
           <SuspectLabel suspect={suspect} stressed={stressed} />
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="border-b border-white/5 px-4 py-2">
+        <div className="flex min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="border-b border-white/5 px-4 py-2">
             <div className="text-[10px] uppercase tracking-[2px] text-[#334455]">Suggested prompts</div>
             <div className="mt-2 flex flex-wrap gap-2">
               {suggestedQuestions.map((question) => (
@@ -312,6 +465,12 @@ export default function InterrogationRoom() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 py-4">
+            {contradictoryEvidence.length > 0 ? (
+              <div className="mb-3 rounded-md border border-[#5B3B30] bg-[#2A1715] px-3 py-2 text-[10px] leading-relaxed tracking-[0.02em] text-[#D9A08E]">
+                Pressure point active: selected evidence points at this suspect. Their next answer should sound more defensive.
+              </div>
+            ) : null}
+
             {messages.length === 0 && !displayText && (
               <div className="flex h-full items-center justify-center text-center text-xs italic text-[#445566]" style={{ fontFamily: "Georgia, serif" }}>
                 Start questioning {suspect.name}.
@@ -392,6 +551,9 @@ export default function InterrogationRoom() {
               </button>
             </div>
           </div>
+          </div>
+
+          <EvidenceBoard />
         </div>
       </div>
     </motion.div>

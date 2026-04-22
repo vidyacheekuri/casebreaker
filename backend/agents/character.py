@@ -2,19 +2,14 @@
 
 from __future__ import annotations
 
-import json
-import re
 from typing import Any
 
-from anthropic import Anthropic
-
+from agents.llm_provider import generate_json
 from models.session import DetectiveInstinct
 from models.world import Character, WorldState
 from rag.literary_retriever import query_literary_passages
 from rag.world_retriever import query_world_context
 from utils.config import (
-    ANTHROPIC_API_KEY,
-    CLAUDE_MODEL,
     INTERROGATION_MAX_TOKENS,
     LITERARY_MATCH_THRESHOLD,
     LLM_RETRY_ATTEMPTS,
@@ -38,7 +33,7 @@ def interrogate_suspect(
 
     instinct = _maybe_detective_instinct(message, suspect)
 
-    reply_text, tone = _call_claude(
+    reply_text, tone = _call_llm(
         suspect=suspect,
         world_context=world_context,
         history=history,
@@ -94,18 +89,12 @@ def _maybe_detective_instinct(message: str, suspect: Character) -> DetectiveInst
     )
 
 
-def _call_claude(
+def _call_llm(
     suspect: Character,
     world_context: str,
     history: list[dict[str, str]],
     message: str,
 ) -> tuple[str, str]:
-    if not ANTHROPIC_API_KEY:
-        return (
-            _offline_reply(suspect, message),
-            "guarded",
-        )
-
     system_prompt = INTERROGATION_SYSTEM_PROMPT.format(
         name=suspect.name,
         age=suspect.age,
@@ -125,28 +114,21 @@ def _call_claude(
         name=suspect.name,
     )
 
-    try:
-        client = Anthropic(api_key=ANTHROPIC_API_KEY)
-        for _attempt in range(LLM_RETRY_ATTEMPTS):
-            try:
-                response = client.messages.create(
-                    model=CLAUDE_MODEL,
-                    system=system_prompt,
-                    max_tokens=INTERROGATION_MAX_TOKENS,
-                    temperature=0.7,
-                    messages=[{"role": "user", "content": user_prompt}],
-                )
-                text = _strip_fences(_response_text(response))
-                payload = json.loads(text)
-                reply = str(payload.get("reply") or "").strip()
-                tone = str(payload.get("tone") or "guarded").strip() or "guarded"
-                if not reply:
-                    reply = _offline_reply(suspect, message)
-                return reply, tone
-            except Exception:
-                continue
-    except Exception:
-        pass
+    for _attempt in range(LLM_RETRY_ATTEMPTS):
+        payload = generate_json(
+            system=system_prompt,
+            user=user_prompt,
+            max_tokens=INTERROGATION_MAX_TOKENS,
+            temperature=0.7,
+        )
+        if payload is None:
+            continue
+        reply = str(payload.get("reply") or "").strip()
+        tone = str(payload.get("tone") or "guarded").strip() or "guarded"
+        if not reply:
+            reply = _offline_reply(suspect, message)
+        return reply, tone
+
     return _offline_reply(suspect, message), "guarded"
 
 
@@ -173,14 +155,3 @@ def _offline_reply(suspect: Character, message: str) -> str:
         f"and I'll tell you what {suspect.name.split()[0]} actually saw."
     )
 
-
-def _response_text(response: Any) -> str:
-    return "".join(getattr(block, "text", "") for block in response.content).strip()
-
-
-def _strip_fences(text: str) -> str:
-    text = text.strip()
-    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
-    if match:
-        return match.group(1).strip()
-    return text

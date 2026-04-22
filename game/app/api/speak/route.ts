@@ -3,6 +3,7 @@ import {
   SynthesizeSpeechCommand,
   type VoiceId,
 } from "@aws-sdk/client-polly";
+import { approxVisemeTimelineFromText } from "@/lib/character/character-pipeline";
 
 export const runtime = "nodejs";
 
@@ -81,6 +82,7 @@ async function elevenlabs(text: string, voiceId: string) {
     return {
       audio: data.audio_base64,
       characterTimestamps: ts.length > 0 ? ts : buildFallbackTimestamps(text, text.length * 80),
+      visemeTimeline: approxVisemeTimelineFromText(text, "elevenlabs-alignment"),
       provider: "elevenlabs",
     };
   } catch (e) { console.error("[ELEVENLABS ERROR] Network/parse error:", e); return null; }
@@ -101,6 +103,7 @@ async function polly(text: string) {
     return {
       audio: bytes.toString("base64"),
       characterTimestamps: buildFallbackTimestamps(text, text.length * 80),
+      visemeTimeline: approxVisemeTimelineFromText(text, "aws-polly-fallback"),
       provider: "aws-polly",
     };
   } catch (e) { console.warn("Polly error:", e); return null; }

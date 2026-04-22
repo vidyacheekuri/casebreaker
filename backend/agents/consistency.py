@@ -1,14 +1,10 @@
-"""Consistency validation and optional Claude-based repair for generated worlds."""
+"""Consistency validation and optional LLM-based repair for generated worlds."""
 
 from __future__ import annotations
 
-import json
-from typing import Any
-
-from anthropic import Anthropic
-
+from agents.llm_provider import generate_json
 from models.world import WorldState
-from utils.config import ANTHROPIC_API_KEY, CLAUDE_MODEL, STORY_GENERATION_MAX_TOKENS
+from utils.config import STORY_GENERATION_MAX_TOKENS
 from utils.prompts import (
     CONSISTENCY_REPAIR_SYSTEM_PROMPT,
     CONSISTENCY_REPAIR_USER_PROMPT,
@@ -66,28 +62,18 @@ def check_consistency(world: WorldState) -> tuple[bool, list[str]]:
     return (len(failed) == 0, sorted(set(failed)))
 
 
-def repair_world_with_claude(world: WorldState) -> WorldState | None:
-    """Ask Claude to repair a broken world while preserving its core premise."""
-    if not ANTHROPIC_API_KEY:
-        return None
-
+def repair_world_with_llm(world: WorldState) -> WorldState | None:
+    """Ask the configured LLM to repair a broken world while preserving its core premise."""
     try:
-        client = Anthropic(api_key=ANTHROPIC_API_KEY)
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
+        raw = generate_json(
             system=CONSISTENCY_REPAIR_SYSTEM_PROMPT,
             max_tokens=STORY_GENERATION_MAX_TOKENS,
-            messages=[
-                {
-                    "role": "user",
-                    "content": CONSISTENCY_REPAIR_USER_PROMPT.format(
-                        world_json=world.model_dump_json(indent=2)
-                    ),
-                }
-            ],
+            user=CONSISTENCY_REPAIR_USER_PROMPT.format(
+                world_json=world.model_dump_json(indent=2)
+            ),
         )
-        text = _strip_fences(_response_text(response))
-        raw = json.loads(text)
+        if raw is None:
+            return None
         raw["slot_id"] = world.slot_id
         raw["slot_index"] = world.slot_index
         raw["case_date"] = world.case_date
@@ -95,23 +81,3 @@ def repair_world_with_claude(world: WorldState) -> WorldState | None:
         return WorldState.model_validate(raw)
     except Exception:
         return None
-
-
-def _response_text(response: Any) -> str:
-    """Collapse Anthropic response segments into one string."""
-    parts: list[str] = []
-    for block in response.content:
-        text = getattr(block, "text", "")
-        if text:
-            parts.append(text)
-    return "".join(parts).strip()
-
-
-def _strip_fences(text: str) -> str:
-    """Remove markdown code fences Claude sometimes adds despite instructions."""
-    import re
-    text = text.strip()
-    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
-    if match:
-        return match.group(1).strip()
-    return text

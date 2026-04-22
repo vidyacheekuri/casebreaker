@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import json
-import re
 from typing import Any
 
-from anthropic import Anthropic
-
+from agents.llm_provider import generate_json
 from models.world import WorldState
-from utils.config import ANTHROPIC_API_KEY, CLAUDE_MODEL, LLM_RETRY_ATTEMPTS
+from utils.config import LLM_RETRY_ATTEMPTS
 from utils.prompts import EVALUATOR_SYSTEM_PROMPT, EVALUATOR_USER_PROMPT
 
 
@@ -32,8 +29,8 @@ def evaluate_accusation(
 
     correct = accused.character_id == world.killer_id
 
-    claude_result = _call_claude(world, accused_id, accused.name, killer.name, reasoning)
-    if claude_result is None:
+    llm_result = _call_llm(world, accused_id, accused.name, killer.name, reasoning)
+    if llm_result is None:
         return {
             "correct": correct,
             "verdict_summary": _offline_summary(correct, accused.name, killer.name, world.motive),
@@ -46,8 +43,8 @@ def evaluate_accusation(
 
     return {
         "correct": correct,
-        "verdict_summary": claude_result.get("verdict_summary", ""),
-        "missed_clues": list(claude_result.get("missed_clues", []))[:3],
+        "verdict_summary": llm_result.get("verdict_summary", ""),
+        "missed_clues": list(llm_result.get("missed_clues", []))[:3],
         "accused_id": accused.character_id,
         "accused_name": accused.name,
         "killer_id": killer.character_id,
@@ -55,16 +52,13 @@ def evaluate_accusation(
     }
 
 
-def _call_claude(
+def _call_llm(
     world: WorldState,
     accused_id: str,
     accused_name: str,
     killer_name: str,
     reasoning: str,
 ) -> dict[str, Any] | None:
-    if not ANTHROPIC_API_KEY:
-        return None
-
     evidence_block = "\n".join(
         f"- {evidence.name} ({evidence.location}) implicates {evidence.implicates}. {evidence.description}"
         for evidence in world.evidence
@@ -85,23 +79,16 @@ def _call_claude(
         timeline_block=timeline_block,
     )
 
-    try:
-        client = Anthropic(api_key=ANTHROPIC_API_KEY)
-        for _attempt in range(LLM_RETRY_ATTEMPTS):
-            try:
-                response = client.messages.create(
-                    model=CLAUDE_MODEL,
-                    system=EVALUATOR_SYSTEM_PROMPT,
-                    max_tokens=600,
-                    temperature=0.4,
-                    messages=[{"role": "user", "content": user_prompt}],
-                )
-                text = _strip_fences(_response_text(response))
-                return json.loads(text)
-            except Exception:
-                continue
-    except Exception:
-        pass
+    for _attempt in range(LLM_RETRY_ATTEMPTS):
+        payload = generate_json(
+            system=EVALUATOR_SYSTEM_PROMPT,
+            user=user_prompt,
+            max_tokens=600,
+            temperature=0.4,
+        )
+        if payload is not None:
+            return payload
+
     return None
 
 
@@ -126,14 +113,3 @@ def _offline_missed_clues(world: WorldState) -> list[str]:
             break
     return clues
 
-
-def _response_text(response: Any) -> str:
-    return "".join(getattr(block, "text", "") for block in response.content).strip()
-
-
-def _strip_fences(text: str) -> str:
-    text = text.strip()
-    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
-    if match:
-        return match.group(1).strip()
-    return text

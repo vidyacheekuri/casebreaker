@@ -1,18 +1,16 @@
-"""Claude-based daily slot generation with deterministic fallback."""
+"""LLM-based daily slot generation with deterministic fallback."""
 
 from __future__ import annotations
 
 import asyncio
-import json
 import random
 from datetime import datetime, timezone
 from typing import Any
 
-from anthropic import Anthropic
-
-from agents.consistency import check_consistency, repair_world_with_claude
+from agents.consistency import check_consistency, repair_world_with_llm
+from agents.llm_provider import generate_json
 from models.world import Character, Evidence, Victim, WorldState
-from utils.config import ANTHROPIC_API_KEY, CLAUDE_MODEL, DAILY_SLOT_COUNT, MAX_GENERATION_RETRIES, STORY_GENERATION_MAX_TOKENS
+from utils.config import DAILY_SLOT_COUNT, MAX_GENERATION_RETRIES, STORY_GENERATION_MAX_TOKENS
 from utils.prompts import ARCHITECT_SINGLE_SYSTEM_PROMPT, ARCHITECT_SINGLE_USER_PROMPT
 from utils.source_material import build_generation_context
 
@@ -35,14 +33,14 @@ def generate_slot_world(
     slot_index: int,
     variant_seed: int = 0,
 ) -> WorldState:
-    """Generate one slot world, retrying Claude generations before falling back."""
+    """Generate one slot world, retrying configured LLM generations before falling back."""
     for attempt in range(MAX_GENERATION_RETRIES):
         source_context = build_generation_context(case_date, slot_index, variant_seed + attempt)
         fbi_entry = source_context["raw"]["fbi"]
         setting = fbi_entry["settings"][0]
         mood = fbi_entry["emotional_tones"][0]
 
-        raw = _generate_single_with_claude(
+        raw = _generate_single_with_llm(
             case_date,
             slot_index,
             setting,
@@ -66,7 +64,7 @@ def generate_slot_world(
         if valid:
             return world
 
-        repaired = repair_world_with_claude(world)
+        repaired = repair_world_with_llm(world)
         if repaired is not None:
             valid, _failed = check_consistency(repaired)
             if valid:
@@ -82,61 +80,29 @@ def generate_slot_world(
     )
 
 
-def _generate_single_with_claude(
+def _generate_single_with_llm(
     case_date: str,
     slot_index: int,
     setting: str,
     mood: str,
     source_context: dict[str, Any],
 ) -> dict[str, Any] | None:
-    """Generate one mystery slot via Claude."""
-    if not ANTHROPIC_API_KEY:
-        return None
-
-    try:
-        client = Anthropic(api_key=ANTHROPIC_API_KEY)
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
-            system=ARCHITECT_SINGLE_SYSTEM_PROMPT,
-            max_tokens=STORY_GENERATION_MAX_TOKENS,
-            temperature=0.9,
-            messages=[
-                {
-                    "role": "user",
-                    "content": ARCHITECT_SINGLE_USER_PROMPT.format(
-                        case_date=case_date,
-                        slot_index=slot_index,
-                        setting=setting,
-                        mood=mood,
-                        motive_family=source_context["motive_family"],
-                        fbi_context=source_context["fbi_context"],
-                        persona_context=source_context["persona_context"],
-                        literary_context=source_context["literary_context"],
-                    ),
-                }
-            ],
-        )
-        if response.stop_reason == "max_tokens":
-            return None
-        text = _strip_fences(_response_text(response))
-        return json.loads(text)
-    except Exception:
-        return None
-
-
-def _response_text(response: Any) -> str:
-    """Collapse Anthropic blocks into a single string."""
-    return "".join(getattr(block, "text", "") for block in response.content).strip()
-
-
-def _strip_fences(text: str) -> str:
-    """Remove markdown code fences Claude sometimes adds despite instructions."""
-    import re
-    text = text.strip()
-    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
-    if match:
-        return match.group(1).strip()
-    return text
+    """Generate one mystery slot via whichever LLM provider is configured."""
+    return generate_json(
+        system=ARCHITECT_SINGLE_SYSTEM_PROMPT,
+        user=ARCHITECT_SINGLE_USER_PROMPT.format(
+            case_date=case_date,
+            slot_index=slot_index,
+            setting=setting,
+            mood=mood,
+            motive_family=source_context["motive_family"],
+            fbi_context=source_context["fbi_context"],
+            persona_context=source_context["persona_context"],
+            literary_context=source_context["literary_context"],
+        ),
+        max_tokens=STORY_GENERATION_MAX_TOKENS,
+        temperature=0.9,
+    )
 
 
 def _grounded_fallback_slot(

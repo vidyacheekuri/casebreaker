@@ -150,6 +150,9 @@ interface GameState {
 
   searchedRooms: string[];
   discoveredEvidence: string[];
+  selectedEvidenceIds: string[];
+  reviewedEvidenceIds: string[];
+  accusationEvidenceIds: string[];
 
   suspectStress: Record<string, number>;
   interrogationHistories: Record<string, Message[]>;
@@ -167,6 +170,9 @@ interface GameState {
   searchRoom: (roomId: string, evidenceIds: string[]) => void;
   selectSuspect: (characterId: string) => void;
   discoverEvidence: (evidenceId: string) => void;
+  toggleEvidenceSelection: (evidenceId: string) => void;
+  markEvidenceReviewed: (evidenceId: string) => void;
+  setEvidenceForAccusation: (evidenceId: string, value: boolean) => void;
   increaseStress: (characterId: string, amount: number) => void;
   addMessages: (characterId: string, msgs: Message[]) => void;
 
@@ -197,6 +203,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   searchedRooms: [],
   discoveredEvidence: [],
+  selectedEvidenceIds: [],
+  reviewedEvidenceIds: [],
+  accusationEvidenceIds: [],
 
   suspectStress: {},
   interrogationHistories: {},
@@ -306,6 +315,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         searchedRooms: [],
         discoveredEvidence: sessionSnapshot.state.evidence_examined,
+        selectedEvidenceIds: [],
+        reviewedEvidenceIds: sessionSnapshot.state.evidence_examined,
+        accusationEvidenceIds: [],
 
         suspectStress: buildStressMap(activeSlot),
         interrogationHistories: hydrateHistoryFromTranscript(activeSlot, sessionSnapshot.transcript),
@@ -345,6 +357,35 @@ export const useGameStore = create<GameState>((set, get) => ({
       discoveredEvidence: state.discoveredEvidence.includes(evidenceId)
         ? state.discoveredEvidence
         : [...state.discoveredEvidence, evidenceId],
+    }));
+  },
+
+  toggleEvidenceSelection: (evidenceId) => {
+    set((state) => ({
+      selectedEvidenceIds: state.selectedEvidenceIds.includes(evidenceId)
+        ? state.selectedEvidenceIds.filter((id) => id !== evidenceId)
+        : [...state.selectedEvidenceIds, evidenceId],
+      reviewedEvidenceIds: state.reviewedEvidenceIds.includes(evidenceId)
+        ? state.reviewedEvidenceIds
+        : [...state.reviewedEvidenceIds, evidenceId],
+    }));
+  },
+
+  markEvidenceReviewed: (evidenceId) => {
+    set((state) => ({
+      reviewedEvidenceIds: state.reviewedEvidenceIds.includes(evidenceId)
+        ? state.reviewedEvidenceIds
+        : [...state.reviewedEvidenceIds, evidenceId],
+    }));
+  },
+
+  setEvidenceForAccusation: (evidenceId, value) => {
+    set((state) => ({
+      accusationEvidenceIds: value
+        ? state.accusationEvidenceIds.includes(evidenceId)
+          ? state.accusationEvidenceIds
+          : [...state.accusationEvidenceIds, evidenceId]
+        : state.accusationEvidenceIds.filter((id) => id !== evidenceId),
     }));
   },
 
@@ -406,6 +447,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       searchedRooms: [],
       discoveredEvidence: [],
+      selectedEvidenceIds: [],
+      reviewedEvidenceIds: [],
+      accusationEvidenceIds: [],
 
       suspectStress: {},
       interrogationHistories: {},

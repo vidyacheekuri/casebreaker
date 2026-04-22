@@ -14,14 +14,24 @@ DATA_DIR = BACKEND_ROOT / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 ENV_PATH = BACKEND_ROOT / ".env"
-if ENV_PATH.exists():
-    load_dotenv(ENV_PATH)
+ENV_FALLBACK_PATHS = [
+    ENV_PATH,
+    REPO_ROOT / ".env",
+    REPO_ROOT / ".env.local",
+    GAME_ROOT / ".env.local",
+]
+for path in ENV_FALLBACK_PATHS:
+    if path.exists():
+        load_dotenv(path, override=False)
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 TRIPO_API_KEY = os.getenv("TRIPO_API_KEY", "")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "auto").strip().lower()
 
 CLAUDE_MODEL = "claude-haiku-4-5-20251001"
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 INTERROGATION_MAX_TOKENS = 120
 STORY_GENERATION_MAX_TOKENS = 4000
 MAX_GENERATION_RETRIES = 5
