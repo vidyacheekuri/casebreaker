@@ -60,12 +60,14 @@ def generate_slot_world(
         except Exception:
             continue
 
+        _normalize_evidence_implications(world)
         valid, _failed = check_consistency(world)
         if valid:
             return world
 
         repaired = repair_world_with_llm(world)
         if repaired is not None:
+            _normalize_evidence_implications(repaired)
             valid, _failed = check_consistency(repaired)
             if valid:
                 return repaired
@@ -78,6 +80,60 @@ def generate_slot_world(
     return WorldState.model_validate(
         _grounded_fallback_slot(case_date, slot_index, source_context)
     )
+
+
+def _normalize_evidence_implications(world: WorldState) -> None:
+    """Keep clue links useful instead of letting every clue implicate one suspect."""
+    character_ids = [character.character_id for character in world.characters]
+    valid_ids = set(character_ids)
+    innocent_ids = [character_id for character_id in character_ids if character_id != world.killer_id]
+
+    if not character_ids:
+        return
+
+    for evidence in world.evidence:
+        normalized = evidence.implicates.strip().lower()
+        if normalized not in valid_ids and normalized != "none":
+            evidence.implicates = "none"
+        else:
+            evidence.implicates = normalized
+
+    culprit_clues = [
+        evidence
+        for evidence in world.evidence
+        if not evidence.is_red_herring and evidence.implicates == world.killer_id
+    ]
+    if not culprit_clues:
+        candidate = next((evidence for evidence in world.evidence if not evidence.is_red_herring), None)
+        if candidate is not None:
+            candidate.implicates = world.killer_id
+            culprit_clues.append(candidate)
+
+    red_herring = next((evidence for evidence in world.evidence if evidence.is_red_herring), None)
+    if red_herring is not None and innocent_ids:
+        red_herring.implicates = innocent_ids[0]
+
+    neutral_candidate = next(
+        (
+            evidence
+            for evidence in reversed(world.evidence)
+            if evidence.implicates == world.killer_id and evidence not in culprit_clues[:1]
+        ),
+        None,
+    )
+    if neutral_candidate is not None:
+        neutral_candidate.implicates = "none"
+
+    counts: dict[str, int] = {}
+    for evidence in world.evidence:
+        counts[evidence.implicates] = counts.get(evidence.implicates, 0) + 1
+
+    if len(world.evidence) >= 3 and max(counts.values(), default=0) == len(world.evidence):
+        world.evidence[0].implicates = world.killer_id
+        if innocent_ids:
+            world.evidence[1].implicates = innocent_ids[0]
+            world.evidence[1].is_red_herring = True
+        world.evidence[-1].implicates = "none"
 
 
 def _generate_single_with_llm(
@@ -158,10 +214,11 @@ def _grounded_fallback_slot(
             if is_killer
             else f"I was near the {rng.choice(['study annex', 'terrace', 'greenhouse'])} when the alarm rose."
         )
+        chosen_name = rng.choice(names[index])
         characters.append(
             Character(
                 character_id=character_id,
-                name=rng.choice(names[index]),
+                name=chosen_name,
                 age=rng.randint(28, 58),
                 occupation=occupation,
                 relationship_to_victim=relationship,
@@ -172,6 +229,7 @@ def _grounded_fallback_slot(
                 knowledge=knowledge,
                 is_killer=is_killer,
                 archetype=persona["archetype"],
+                gender_presentation=_infer_gender_from_name(chosen_name),
                 appearance=(
                     f"{persona['visual_cues']}. "
                     f"Period-appropriate styling for a {occupation} tied to a {setting} mystery."
@@ -305,3 +363,14 @@ def _grounded_fallback_slot(
         ],
         "chroma_collection": f"world_{case_date.replace('-', '_')}_{slot_index}",
     }
+
+
+def _infer_gender_from_name(name: str) -> str:
+    first = name.strip().split(" ", 1)[0].lower()
+    female = {"clara", "beatrice", "nina", "mabel", "rosalind", "edith", "marian", "eleanor"}
+    male = {"elias", "owen", "lucian", "arthur", "miles", "victor", "jonas", "julian", "thomas"}
+    if first in female:
+        return "female"
+    if first in male:
+        return "male"
+    return "neutral"

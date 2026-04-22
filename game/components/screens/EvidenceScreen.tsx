@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useGameStore } from "@/lib/store";
+import { evidenceLinkedSuspectLabel, useGameStore } from "@/lib/store";
+import EvidenceImage from "@/components/ui/EvidenceImage";
 
 export default function EvidenceScreen() {
   const { activeSlot, discoveredEvidence, goTo } = useGameStore();
@@ -73,11 +74,16 @@ export default function EvidenceScreen() {
                   }}
                   whileHover={{ borderColor: "rgba(212,168,67,.38)" }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold tracking-wide text-[#E8E0D0]">{evidence.name}</div>
-                    <div className="text-[10px] text-[#D4A843]">{selected ? "▲" : "▼"}</div>
+                  <div className="flex items-center gap-3">
+                    <EvidenceImage evidence={evidence} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-xs font-semibold tracking-wide text-[#E8E0D0]">{evidence.name}</div>
+                        <div className="text-[10px] text-[#D4A843]">{selected ? "▲" : "▼"}</div>
+                      </div>
+                      <div className="mt-1 text-[9px] uppercase tracking-wider text-[#667788]">{evidence.location}</div>
+                    </div>
                   </div>
-                  <div className="mt-1 text-[9px] uppercase tracking-wider text-[#667788]">{evidence.location}</div>
 
                   {selected && (
                     <div className="mt-3 border-t border-white/10 pt-3">
@@ -85,7 +91,7 @@ export default function EvidenceScreen() {
                         {evidence.description}
                       </p>
                       <div className="mt-2 text-[9px] uppercase tracking-wider text-[#D4A843]">
-                        Implicates: {evidence.implicates === "none" ? "Unknown" : evidence.implicates}
+                        Linked suspect: {evidenceLinkedSuspectLabel(activeSlot, evidence)}
                         {evidence.is_red_herring ? " (unverified)" : ""}
                       </div>
                     </div>

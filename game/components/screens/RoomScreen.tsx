@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGameStore } from "@/lib/store";
+import { evidenceLinkedSuspectLabel, useGameStore } from "@/lib/store";
+import EvidenceImage from "@/components/ui/EvidenceImage";
 
 export default function RoomScreen() {
   const {
@@ -152,9 +153,17 @@ export default function RoomScreen() {
                           borderColor: isExpanded ? "rgba(212,168,67,.4)" : "rgba(255,255,255,.08)",
                         }}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs font-semibold tracking-wide text-[#C8D0DC]">{evidence.name}</div>
-                          <div className="text-[10px] text-[#D4A843]">{isExpanded ? "▲" : "▼"}</div>
+                        <div className="flex items-center gap-3">
+                          <EvidenceImage evidence={evidence} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="text-xs font-semibold tracking-wide text-[#C8D0DC]">{evidence.name}</div>
+                              <div className="text-[10px] text-[#D4A843]">{isExpanded ? "▲" : "▼"}</div>
+                            </div>
+                            <div className="mt-1 text-[9px] uppercase tracking-wider text-[#667788]">
+                              {evidence.location}
+                            </div>
+                          </div>
                         </div>
 
                         <AnimatePresence>
@@ -173,7 +182,7 @@ export default function RoomScreen() {
                                 {evidence.description}
                               </p>
                               <div className="mt-2 text-[9px] uppercase tracking-wider text-[#D4A843]">
-                                Implicates: {evidence.implicates === "none" ? "Unknown" : evidence.implicates}
+                                Linked suspect: {evidenceLinkedSuspectLabel(activeSlot, evidence)}
                                 {evidence.is_red_herring ? " (unverified)" : ""}
                               </div>
                             </motion.div>

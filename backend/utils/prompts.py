@@ -9,6 +9,8 @@ Hard requirements:
 - Exactly one killer with alibi_true: false.
 - Innocent suspects must have supportable alibis (witnessed in timeline).
 - Evidence must connect logically to timeline and characters.
+- Evidence implications must be varied: at least 2 clues should implicate the killer, at least 1 clue should implicate an innocent suspect as a red herring, and at least 1 clue should use "none" for scene context.
+- Do not make every evidence item implicate the same suspect.
 - Keep descriptions to 1-2 sentences each — concise but vivid.
 - Write everything in clear, modern, normal English.
 - Do NOT use archaic, Victorian-novel, or overly literary phrasing.
@@ -42,6 +44,7 @@ Return this exact JSON shape (no wrapper key):
       "knowledge": ["string", "string"],
       "is_killer": false,
       "archetype": "string",
+      "gender_presentation": "male, female, or neutral",
       "appearance": "string (1-2 sentences for 3D model generation)"
     }
   ],
@@ -75,6 +78,7 @@ Project Gutenberg style and clue references:
 
 Make this story feel distinct while staying faithful to the supplied priors and references.
 Use the selected persona archetypes directly when building suspect personalities, secrets, and appearances.
+Set gender_presentation explicitly for each suspect based on their name, role, and relationship, and make the appearance match it.
 Let the literary references influence atmosphere, clue logic, and the kind of red herring you introduce.
 Keep all prose in plain modern English that a player can read quickly.
 Return only the JSON object. No extra text."""
@@ -260,4 +264,3 @@ Timeline:
 {timeline_block}
 
 Return only the JSON object."""
-

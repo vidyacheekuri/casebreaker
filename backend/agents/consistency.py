@@ -56,6 +56,19 @@ def check_consistency(world: WorldState) -> tuple[bool, list[str]]:
             failed.append("evidence_source")
             break
 
+    implication_counts: dict[str, int] = {}
+    for evidence in world.evidence:
+        implication_counts[evidence.implicates] = implication_counts.get(evidence.implicates, 0) + 1
+
+    if world.evidence and max(implication_counts.values(), default=0) == len(world.evidence):
+        failed.append("evidence_variety")
+
+    if not any(
+        evidence.implicates == world.killer_id and not evidence.is_red_herring
+        for evidence in world.evidence
+    ):
+        failed.append("culprit_evidence")
+
     if not world.motive.strip():
         failed.append("motive_coherence")
 

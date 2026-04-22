@@ -35,6 +35,7 @@ class Character(BaseModel):
     knowledge: list[str] = Field(default_factory=list)
     is_killer: bool = False
     archetype: str = ""
+    gender_presentation: str | None = None
     appearance: str = Field(
         default="",
         description="Text prompt for later Tripo model generation.",
@@ -58,6 +59,9 @@ class Evidence(BaseModel):
         description="The character_id implicated by the evidence, or 'none'.",
     )
     is_red_herring: bool = False
+    image_url: str | None = None
+    image_prompt: str | None = None
+    image_status: str = "idle"
 
 
 class WorldState(BaseModel):

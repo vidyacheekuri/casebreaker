@@ -41,13 +41,18 @@ out/
 
 # ===== ChromaDB / local data =====
 chroma_data/
+backend/data/chroma/
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
 
 # ===== Large / generated media =====
 *.mov
 *.mp4
 *.fbx
+game/public/evidence/generated/
+game/public/models/generated/
 
 # ===== Misc =====
 .cursor/

@@ -18,6 +18,7 @@ export interface SuspectDto {
   knowledge: string[];
   is_killer: boolean;
   archetype: string;
+  gender_presentation?: string | null;
   appearance: string;
   model_url: string | null;
   model_path: string | null;
@@ -31,6 +32,9 @@ export interface EvidenceDto {
   description: string;
   implicates: string;
   is_red_herring: boolean;
+  image_url?: string | null;
+  image_prompt?: string | null;
+  image_status?: string;
 }
 
 export interface DailySlotDto {

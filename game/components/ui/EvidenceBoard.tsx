@@ -3,17 +3,14 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { useGameStore } from "@/lib/store";
+import { evidenceLinkedSuspectLabel, useGameStore } from "@/lib/store";
 import type { EvidenceDto } from "@/lib/backend-types";
+import EvidenceImage from "@/components/ui/EvidenceImage";
 
 function evidenceCategory(item: EvidenceDto): string {
   if (item.is_red_herring) return "Unverified Lead";
   if (item.implicates && item.implicates !== "none") return "Suspect Link";
   return "Physical Clue";
-}
-
-function linkedLabel(item: EvidenceDto): string {
-  return item.implicates && item.implicates !== "none" ? item.implicates : "No clear suspect";
 }
 
 function statusFor(item: EvidenceDto, reviewed: boolean, selected: boolean): "Key" | "Reviewed" | "Selected" | "New" {
@@ -108,34 +105,39 @@ export default function EvidenceBoard() {
                   }}
                   whileHover={{ y: -1 }}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold leading-snug text-[#E8ECF3]" style={{ fontFamily: "Georgia, serif" }}>
-                        {item.name}
+                  <div className="flex items-start gap-3">
+                    <EvidenceImage evidence={item} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold leading-snug text-[#E8ECF3]" style={{ fontFamily: "Georgia, serif" }}>
+                            {item.name}
+                          </div>
+                          <div className="mt-1 text-[11px] uppercase tracking-[2px] text-[#6E7C92]">
+                            {evidenceCategory(item)}
+                          </div>
+                        </div>
+                        <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] uppercase tracking-[1.8px] ${statusClass(status)}`}>
+                          {status}
+                        </span>
                       </div>
-                      <div className="mt-1 text-[11px] uppercase tracking-[2px] text-[#6E7C92]">
-                        {evidenceCategory(item)}
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                        <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[#93A4BA]">
+                          {evidenceLinkedSuspectLabel(activeSlot, item)}
+                        </span>
+                        {suspectLinked ? (
+                          <span className="rounded-full border border-[#5B3B30] bg-[#2A1715] px-2 py-0.5 text-[#D9A08E]">
+                            Contradiction ready
+                          </span>
+                        ) : null}
+                        {accusationEvidenceIds.includes(item.evidence_id) ? (
+                          <span className="rounded-full border border-[#5B4B25] bg-[#2B2414] px-2 py-0.5 text-[#D8BC79]">
+                            Accusation
+                          </span>
+                        ) : null}
                       </div>
                     </div>
-                    <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] uppercase tracking-[1.8px] ${statusClass(status)}`}>
-                      {status}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                    <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[#93A4BA]">
-                      {linkedLabel(item)}
-                    </span>
-                    {suspectLinked ? (
-                      <span className="rounded-full border border-[#5B3B30] bg-[#2A1715] px-2 py-0.5 text-[#D9A08E]">
-                        Contradiction ready
-                      </span>
-                    ) : null}
-                    {accusationEvidenceIds.includes(item.evidence_id) ? (
-                      <span className="rounded-full border border-[#5B4B25] bg-[#2B2414] px-2 py-0.5 text-[#D8BC79]">
-                        Accusation
-                      </span>
-                    ) : null}
                   </div>
                 </motion.button>
               );
@@ -152,6 +154,8 @@ export default function EvidenceBoard() {
             </button>
 
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <EvidenceImage evidence={selectedEvidence} size="detail" />
+
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-lg font-semibold text-[#F1F3F7]" style={{ fontFamily: "Georgia, serif" }}>
@@ -169,7 +173,9 @@ export default function EvidenceBoard() {
               <div className="mt-4 grid gap-3">
                 <DetailRow label="Description">{selectedEvidence.description}</DetailRow>
                 <DetailRow label="Where Found">{selectedEvidence.location}</DetailRow>
-                <DetailRow label="Related Suspect">{linkedLabel(selectedEvidence)}</DetailRow>
+                <DetailRow label="Related Suspect">
+                  {evidenceLinkedSuspectLabel(activeSlot, selectedEvidence)}
+                </DetailRow>
                 <DetailRow label="Why It Matters">
                   {selectedEvidence.implicates !== "none"
                     ? "This clue points toward a suspect and can be used to pressure their account."

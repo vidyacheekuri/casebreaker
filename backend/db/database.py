@@ -27,7 +27,15 @@ async def init_db(connection: aiosqlite.Connection) -> None:
     """Create database tables if they do not exist."""
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
     await connection.executescript(schema)
+    await _ensure_optional_columns(connection)
     await connection.commit()
+
+
+async def _ensure_optional_columns(connection: aiosqlite.Connection) -> None:
+    cursor = await connection.execute("PRAGMA table_info(suspects)")
+    suspect_columns = {row["name"] for row in await cursor.fetchall()}
+    if "gender_presentation" not in suspect_columns:
+        await connection.execute("ALTER TABLE suspects ADD COLUMN gender_presentation TEXT")
 
 
 async def replace_daily_slots(
@@ -84,9 +92,9 @@ async def replace_daily_slots(
                 INSERT INTO suspects (
                     slot_id, character_id, name, age, occupation, relationship_to_victim,
                     personality, alibi, alibi_true, secret, knowledge_json, is_killer,
-                    archetype, appearance, model_path, voice_id
+                    archetype, gender_presentation, appearance, model_path, voice_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     world.slot_id,
@@ -102,6 +110,7 @@ async def replace_daily_slots(
                     json.dumps(character.knowledge),
                     int(character.is_killer),
                     character.archetype,
+                    character.gender_presentation,
                     character.appearance,
                     character.model_path,
                     character.voice_id,
@@ -294,6 +303,18 @@ async def fetch_world_by_slot_id(
     if row is None:
         return None
     return WorldState.model_validate_json(row["world_json"])
+
+
+async def update_world_json(
+    connection: aiosqlite.Connection,
+    world: WorldState,
+) -> None:
+    """Persist updated derived world data such as generated evidence image paths."""
+    await connection.execute(
+        "UPDATE daily_slots SET world_json = ? WHERE slot_id = ?",
+        (world.model_dump_json(), world.slot_id),
+    )
+    await connection.commit()
 
 
 async def insert_session(

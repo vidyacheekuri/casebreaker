@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS suspects (
     knowledge_json TEXT NOT NULL,
     is_killer INTEGER NOT NULL,
     archetype TEXT NOT NULL DEFAULT '',
+    gender_presentation TEXT,
     appearance TEXT NOT NULL DEFAULT '',
     model_path TEXT,
     voice_id TEXT,

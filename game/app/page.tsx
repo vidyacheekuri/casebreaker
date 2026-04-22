@@ -11,12 +11,14 @@ import InterrogationRoom from "@/components/screens/InterrogationRoom";
 import AccusationScreen from "@/components/screens/AccusationScreen";
 import VerdictScreen from "@/components/screens/VerdictScreen";
 import AmbientSound from "@/components/ui/AmbientSound";
+import EvidenceImageBootstrapper from "@/components/ui/EvidenceImageBootstrapper";
 
 export default function Game() {
   const screen = useGameStore((s) => s.screen);
 
   return (
     <div className="h-dvh w-screen overflow-hidden" style={{ background: "#070E1A", color: "#C8D0DC" }}>
+      <EvidenceImageBootstrapper />
       <AnimatePresence mode="wait">
         {screen === "intro" && <IntroScreen key="intro" />}
         {screen === "cinematic" && <CinematicScreen key="cinematic" />}

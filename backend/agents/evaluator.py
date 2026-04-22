@@ -59,8 +59,19 @@ def _call_llm(
     killer_name: str,
     reasoning: str,
 ) -> dict[str, Any] | None:
+    suspect_names = {
+        character.character_id: character.name
+        for character in world.characters
+    }
+
+    def linked_suspect_label(character_id: str) -> str:
+        normalized = character_id.strip().lower()
+        if normalized == "none":
+            return "no direct suspect"
+        return suspect_names.get(normalized, "unknown suspect")
+
     evidence_block = "\n".join(
-        f"- {evidence.name} ({evidence.location}) implicates {evidence.implicates}. {evidence.description}"
+        f"- {evidence.name} ({evidence.location}) links to {linked_suspect_label(evidence.implicates)}. {evidence.description}"
         for evidence in world.evidence
     )
     timeline_block = "\n".join(
@@ -112,4 +123,3 @@ def _offline_missed_clues(world: WorldState) -> list[str]:
         if len(clues) >= 3:
             break
     return clues
-

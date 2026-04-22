@@ -85,6 +85,18 @@ export function buildRoomsFromEvidence(evidence: EvidenceDto[]): InvestigationRo
   return Array.from(grouped.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export function evidenceLinkedSuspectLabel(slot: DailySlotDto | null, evidence: EvidenceDto): string {
+  const implicates = evidence.implicates.trim().toLowerCase();
+  if (!slot || !implicates || implicates === "none") {
+    return "No direct suspect link";
+  }
+
+  return (
+    slot.suspects.find((suspect) => suspect.character_id.toLowerCase() === implicates)?.name ??
+    "Unknown suspect"
+  );
+}
+
 function buildStressMap(slot: DailySlotDto | null): Record<string, number> {
   if (!slot) {
     return {};
@@ -125,6 +137,24 @@ function errorMessage(error: unknown): string {
     return error.message;
   }
   return "Something went wrong. Please try again.";
+}
+
+function updateSlotEvidenceImage(
+  slot: DailySlotDto,
+  evidenceId: string,
+  patch: Partial<Pick<EvidenceDto, "image_url" | "image_prompt" | "image_status">>
+): DailySlotDto {
+  return {
+    ...slot,
+    evidence: slot.evidence.map((item) =>
+      item.evidence_id === evidenceId
+        ? {
+            ...item,
+            ...patch,
+          }
+        : item
+    ),
+  };
 }
 
 interface GameState {
@@ -173,6 +203,10 @@ interface GameState {
   toggleEvidenceSelection: (evidenceId: string) => void;
   markEvidenceReviewed: (evidenceId: string) => void;
   setEvidenceForAccusation: (evidenceId: string, value: boolean) => void;
+  updateEvidenceImage: (
+    evidenceId: string,
+    patch: Partial<Pick<EvidenceDto, "image_url" | "image_prompt" | "image_status">>
+  ) => void;
   increaseStress: (characterId: string, amount: number) => void;
   addMessages: (characterId: string, msgs: Message[]) => void;
 
@@ -386,6 +420,19 @@ export const useGameStore = create<GameState>((set, get) => ({
           ? state.accusationEvidenceIds
           : [...state.accusationEvidenceIds, evidenceId]
         : state.accusationEvidenceIds.filter((id) => id !== evidenceId),
+    }));
+  },
+
+  updateEvidenceImage: (evidenceId, patch) => {
+    set((state) => ({
+      activeSlot: state.activeSlot
+        ? updateSlotEvidenceImage(state.activeSlot, evidenceId, patch)
+        : state.activeSlot,
+      hiddenSlots: state.hiddenSlots.map((slot) =>
+        slot.slot_id === state.activeSlot?.slot_id
+          ? updateSlotEvidenceImage(slot, evidenceId, patch)
+          : slot
+      ),
     }));
   },
 
