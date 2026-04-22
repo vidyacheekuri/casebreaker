@@ -1,0 +1,62 @@
+[
+  {
+    "id": "inheritance_pressure",
+    "motive_family": "inheritance pressure",
+    "relationship_patterns": ["spouse versus heir", "dependent nephew", "estranged sibling"],
+    "suspect_pressures": ["fear of losing financial security", "resentment over a revised will", "quiet panic over public disgrace"],
+    "victim_roles": ["industrialist", "estate owner", "publisher", "philanthropist"],
+    "settings": ["country manor", "ancestral estate", "private library", "winter retreat"],
+    "clue_styles": ["amended will", "financial ledger", "destroyed legal paper", "private letter"],
+    "emotional_tones": ["cold resentment", "masked panic", "family bitterness"]
+  },
+  {
+    "id": "reputation_ruin",
+    "motive_family": "reputation ruin",
+    "relationship_patterns": ["headmistress and trustee", "doctor and patron", "journalist and benefactor"],
+    "suspect_pressures": ["fear of scandal", "career collapse", "exposure of a private affair"],
+    "victim_roles": ["headmistress", "philanthropist", "newspaper proprietor", "magistrate"],
+    "settings": ["boarding school", "riverside estate", "lecture hall", "hotel drawing room"],
+    "clue_styles": ["unsigned warning note", "burned correspondence", "hidden photograph", "altered guest register"],
+    "emotional_tones": ["suppressed shame", "icy composure", "social dread"]
+  },
+  {
+    "id": "business_betrayal",
+    "motive_family": "business betrayal",
+    "relationship_patterns": ["partner and investor", "manager and owner", "solicitor and client"],
+    "suspect_pressures": ["embezzlement about to be exposed", "failed speculation", "forged signature risk"],
+    "victim_roles": ["railway investor", "hotel owner", "broker", "shipping director"],
+    "settings": ["railway hotel", "city club", "private office", "country house study"],
+    "clue_styles": ["missing ledger page", "telegram receipt", "falsified contract", "locked dispatch case"],
+    "emotional_tones": ["professional jealousy", "desperation", "controlled urgency"]
+  },
+  {
+    "id": "romantic_triangle",
+    "motive_family": "romantic triangle",
+    "relationship_patterns": ["spouse and confidant", "former fiance and new partner", "companion and household heir"],
+    "suspect_pressures": ["unrequited devotion", "fear of abandonment", "jealous humiliation"],
+    "victim_roles": ["composer", "estate owner", "collector", "doctor"],
+    "settings": ["conservatory", "music room", "seaside villa", "country hotel"],
+    "clue_styles": ["misdirected letter", "pressed flower", "monogrammed glove", "torn photograph"],
+    "emotional_tones": ["yearning", "humiliation", "elegant bitterness"]
+  },
+  {
+    "id": "political_blackmail",
+    "motive_family": "political blackmail",
+    "relationship_patterns": ["councilman and aide", "candidate and donor", "magistrate and fixer"],
+    "suspect_pressures": ["leaked secrets", "extortion", "fear of public inquiry"],
+    "victim_roles": ["councilman", "magistrate", "campaign patron", "retired colonel"],
+    "settings": ["town hall residence", "club smoking room", "country hunting lodge", "private carriage"],
+    "clue_styles": ["coded diary entry", "blackmail note", "meeting schedule", "hidden key"],
+    "emotional_tones": ["paranoia", "stiff formality", "public image anxiety"]
+  },
+  {
+    "id": "caretaker_grievance",
+    "motive_family": "caretaker grievance",
+    "relationship_patterns": ["housekeeper and employer", "gardener and owner", "nurse and patient"],
+    "suspect_pressures": ["long-buried insult", "dismissal threat", "unequal dependence"],
+    "victim_roles": ["widowed invalid", "estate matriarch", "collector", "retired judge"],
+    "settings": ["walled garden", "greenhouse", "guest wing", "servants' corridor"],
+    "clue_styles": ["tool out of place", "boot prints", "servants' rota", "mislaid medicine tray"],
+    "emotional_tones": ["quiet fury", "wounded loyalty", "class resentment"]
+  }
+]

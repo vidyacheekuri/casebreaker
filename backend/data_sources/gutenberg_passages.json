@@ -1,0 +1,58 @@
+[
+  {
+    "id": "styles_domestic_ritual",
+    "source_title": "The Mysterious Affair at Styles",
+    "source_author": "Agatha Christie",
+    "motifs": ["country house", "domestic ritual", "inheritance", "quiet poison panic"],
+    "text": "Use the logic of a familiar household ritual turning suspicious: a routine drink, a repeated courtesy, or an intimate habit suddenly becomes the key deduction."
+  },
+  {
+    "id": "styles_performed_grief",
+    "source_title": "The Mysterious Affair at Styles",
+    "source_author": "Agatha Christie",
+    "motifs": ["performed grief", "widow", "inheritance", "social poise"],
+    "text": "Let emotional control become suspicious. A suspect who appears too polished in mourning should feel chillingly rehearsed rather than melodramatic."
+  },
+  {
+    "id": "scarlet_precision",
+    "source_title": "A Study in Scarlet",
+    "source_author": "Arthur Conan Doyle",
+    "motifs": ["precise denial", "logical clueing", "verbal tells"],
+    "text": "Build deductions from exact phrasing. A suspect's careful denial should reveal what they fear being known, even when they never confess."
+  },
+  {
+    "id": "norwood_destroyed_document",
+    "source_title": "The Adventure of the Norwood Builder",
+    "source_author": "Arthur Conan Doyle",
+    "motifs": ["destroyed paper", "financial paper trail", "misdirection"],
+    "text": "A burned or hidden document should function as a clue with motive inside it: not merely what it said, but who needed it unseen."
+  },
+  {
+    "id": "baskervilles_atmosphere",
+    "source_title": "The Hound of the Baskervilles",
+    "source_author": "Arthur Conan Doyle",
+    "motifs": ["weather dread", "isolated estate", "landscape as pressure"],
+    "text": "Let atmosphere bear on the mystery. Fog, rain, or wind should tighten suspicion and give movement across the grounds narrative weight."
+  },
+  {
+    "id": "rue_morgue_locked_room",
+    "source_title": "The Murders in the Rue Morgue",
+    "source_author": "Edgar Allan Poe",
+    "motifs": ["apparently impossible scene", "witness contradiction", "analytic reveal"],
+    "text": "Stage one element that seems impossible at first glance, then make its answer depend on observing contradictions in witness testimony."
+  },
+  {
+    "id": "moonstone_household_tension",
+    "source_title": "The Moonstone",
+    "source_author": "Wilkie Collins",
+    "motifs": ["household suspicion", "servants and guests", "stolen object"],
+    "text": "Use a shared household where every class layer sees only part of the truth; servants, guests, and relatives should each control a missing fragment."
+  },
+  {
+    "id": "christie_red_herring",
+    "source_title": "The Murder of Roger Ackroyd",
+    "source_author": "Agatha Christie",
+    "motifs": ["red herring", "narrative omission", "small village tensions"],
+    "text": "Place a loud and tempting suspect in the foreground, but let the real solution hide in a quieter contradiction or omission."
+  }
+]

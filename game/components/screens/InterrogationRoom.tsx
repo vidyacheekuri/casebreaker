@@ -1,60 +1,77 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import { interrogateSession } from "@/lib/backend-client";
 import { useGameStore } from "@/lib/store";
-import { getSuspect, HARLOW_MANOR } from "@/lib/cases/harlow-manor";
-import type { SuspectId, EvidenceId } from "@/lib/cases/harlow-manor";
-import type { Message } from "@/lib/store";
+import type { DetectiveInstinctDto, SuspectDto } from "@/lib/backend-types";
 import SpeakingAura from "@/components/characters/SpeakingAura";
 
-// Canvas must be client-only (WebGL can't run in SSR)
 const AvatarCanvas = dynamic(() => import("@/components/characters/AvatarCanvas"), { ssr: false });
 
-// Suspect name + status overlay shown below the 3D canvas
-function SuspectLabel({ suspectId, stressed }: { suspectId: SuspectId; stressed: boolean }) {
-  const suspect = getSuspect(suspectId);
+const TONE_STRESS_IMPACT: Record<string, number> = {
+  guarded: 4,
+  evasive: 7,
+  defensive: 10,
+  nervous: 12,
+  hostile: 14,
+  anxious: 9,
+  composed: 2,
+  calm: 1,
+};
+
+function stressImpactFromTone(tone: string): number {
+  const normalized = tone.trim().toLowerCase();
+  return TONE_STRESS_IMPACT[normalized] ?? 5;
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function revealByWords(text: string, onChunk: (value: string) => void): Promise<void> {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) {
+    onChunk("");
+    return;
+  }
+
+  let assembled = "";
+  for (let index = 0; index < words.length; index += 1) {
+    assembled = assembled ? `${assembled} ${words[index]}` : words[index];
+    onChunk(assembled);
+    await wait(26);
+  }
+}
+
+function buildSuggestedQuestions(suspect: SuspectDto): string[] {
+  return [
+    "Where were you at the time of the death?",
+    "Walk me through your alibi in detail.",
+    `How would you describe your relationship to the victim (${suspect.relationship_to_victim})?`,
+    `What are you leaving out about that night?`,
+  ];
+}
+
+function SuspectLabel({ suspect, stressed }: { suspect: SuspectDto; stressed: boolean }) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-5 pointer-events-none" style={{ zIndex: 20 }}>
-      <div className="text-sm font-semibold tracking-[2px] uppercase text-[#E8E0D0]" style={{ fontFamily: "Georgia, serif" }}>
+    <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col items-center pb-5" style={{ zIndex: 20 }}>
+      <div className="text-sm font-semibold uppercase tracking-[2px] text-[#E8E0D0]" style={{ fontFamily: "Georgia, serif" }}>
         {suspect.name}
       </div>
-      <div className="text-[10px] text-[#D4A843] mt-1 tracking-wider">
-        {stressed ? "Visibly tense" : "Composed"}
-      </div>
-      <div className="text-[9px] text-[#445566] mt-0.5 italic">{suspect.occupation}</div>
+      <div className="mt-1 text-[10px] tracking-wider text-[#D4A843]">{stressed ? "Visibly tense" : "Composed"}</div>
+      <div className="mt-0.5 text-[9px] italic text-[#445566]">{suspect.occupation}</div>
     </div>
   );
 }
 
-const SUGGESTED_QUESTIONS: Record<SuspectId, string[]> = {
-  fenn: [
-    "Where were you when Edmund died?",
-    "Tell me about your medical bag.",
-    "Did you notice anything unusual last night?",
-    "What is your relationship with Victoria Harlow?",
-  ],
-  victoria: [
-    "Where were you between 9 and 10 PM?",
-    "Tell me about Edmund's will.",
-    "Did you enter the guest wing last night?",
-    "How would you describe your marriage?",
-  ],
-  oliver: [
-    "Tell me about your argument with Edmund.",
-    "What do you owe the moneylenders?",
-    "Did you see anyone when you left the library?",
-    "Where were you after leaving Edmund?",
-  ],
-};
-
-
 export default function InterrogationRoom() {
   const {
-    selectedSuspect,
+    sessionId,
+    activeSlot,
+    selectedSuspectId,
     goTo,
-    discoveredEvidence,
     suspectStress,
     interrogationHistories,
     addMessages,
@@ -65,152 +82,188 @@ export default function InterrogationRoom() {
   const [loading, setLoading] = useState(false);
   const [displayText, setDisplayText] = useState("");
   const [speaking, setSpeaking] = useState(false);
+  const [instinct, setInstinct] = useState<DetectiveInstinctDto | null>(null);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioEnabled = useRef(true);
 
-  if (!selectedSuspect) {
-    goTo("manor");
-    return null;
-  }
-
-  const suspect = getSuspect(selectedSuspect);
-  const messages: Message[] = interrogationHistories[selectedSuspect] ?? [];
-  const stress = suspectStress[selectedSuspect] ?? 0;
+  const suspect =
+    activeSlot && selectedSuspectId
+      ? activeSlot.suspects.find((candidate) => candidate.character_id === selectedSuspectId) ?? null
+      : null;
+  const messages = useMemo(
+    () => (selectedSuspectId ? interrogationHistories[selectedSuspectId] ?? [] : []),
+    [interrogationHistories, selectedSuspectId]
+  );
+  const stress = selectedSuspectId ? suspectStress[selectedSuspectId] ?? 0 : 0;
   const stressed = stress >= 40;
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, displayText]);
-
-  const speakText = useCallback(async (text: string) => {
-    if (!audioEnabled.current) return;
-    setSpeaking(true);
-    const safetyTimer = setTimeout(() => setSpeaking(false), Math.max(8000, text.length * 80));
-    try {
-      const res = await fetch("/api/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voiceId: suspect.voiceId }),
-      });
-      if (!res.ok) throw new Error("speak unavailable");
-      const { audio } = await res.json();
-      const el = new Audio(`data:audio/mpeg;base64,${audio}`);
-      el.onended = () => { clearTimeout(safetyTimer); setSpeaking(false); };
-      el.onerror = () => { clearTimeout(safetyTimer); setSpeaking(false); };
-      el.play().catch(() => { clearTimeout(safetyTimer); setSpeaking(false); });
-    } catch {
-      if ("speechSynthesis" in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9; utterance.pitch = 0.85; utterance.lang = "en-GB";
-        utterance.onend = () => { clearTimeout(safetyTimer); setSpeaking(false); };
-        window.speechSynthesis.speak(utterance);
-      } else {
-        clearTimeout(safetyTimer); setSpeaking(false);
-      }
+    if (!sessionId || !activeSlot) {
+      goTo("intro");
+      return;
     }
-  }, [suspect.voiceId]);
+
+    if (!selectedSuspectId || !suspect) {
+      goTo("manor");
+    }
+  }, [activeSlot, goTo, selectedSuspectId, sessionId, suspect]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, displayText, instinct]);
+
+  const speakText = useCallback(
+    async (text: string) => {
+      if (!audioEnabled.current || !text.trim()) {
+        return;
+      }
+
+      setSpeaking(true);
+      const timeout = window.setTimeout(() => setSpeaking(false), Math.max(9000, text.length * 80));
+
+      try {
+        const response = await fetch("/api/speak", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, voiceId: suspect?.voice_id ?? undefined }),
+        });
+
+        if (!response.ok) {
+          throw new Error("speak unavailable");
+        }
+
+        const payload = (await response.json()) as { audio?: string };
+        if (!payload.audio) {
+          throw new Error("missing audio");
+        }
+
+        const audio = new Audio(`data:audio/mpeg;base64,${payload.audio}`);
+        audio.onended = () => {
+          window.clearTimeout(timeout);
+          setSpeaking(false);
+        };
+        audio.onerror = () => {
+          window.clearTimeout(timeout);
+          setSpeaking(false);
+        };
+
+        await audio.play();
+      } catch {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.92;
+        utterance.pitch = 0.9;
+        utterance.onend = () => {
+          window.clearTimeout(timeout);
+          setSpeaking(false);
+        };
+        utterance.onerror = () => {
+          window.clearTimeout(timeout);
+          setSpeaking(false);
+        };
+        window.speechSynthesis.speak(utterance);
+      }
+    },
+    [suspect]
+  );
 
   const sendMessage = useCallback(async () => {
-    const text = input.trim();
-    if (!text || loading) return;
+    if (!sessionId || !selectedSuspectId || !suspect) {
+      return;
+    }
 
-    const userMsg: Message = { role: "user", content: text };
-    addMessages(selectedSuspect, [userMsg]);
+    const text = input.trim();
+    if (!text || loading) {
+      return;
+    }
+
+    addMessages(selectedSuspectId, [{ role: "user", content: text }]);
     setInput("");
     setLoading(true);
     setDisplayText("");
+    setInstinct(null);
 
     try {
-      const res = await fetch("/api/interrogate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          suspectId: selectedSuspect,
-          question: text,
-          history: messages.map((m) => ({ role: m.role, content: m.content })),
-          discoveredEvidence: discoveredEvidence as EvidenceId[],
-          stressLevel: stress,
-        }),
+      const response = await interrogateSession(sessionId, {
+        character_id: selectedSuspectId,
+        message: text,
       });
 
-      if (!res.ok || !res.body) throw new Error("Request failed");
+      increaseStress(selectedSuspectId, stressImpactFromTone(response.tone));
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullResponse = "";
+      await revealByWords(response.reply, setDisplayText);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        for (const line of chunk.split("\n")) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6);
-          if (data === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.type === "meta" && parsed.stressImpact > 0) {
-              increaseStress(selectedSuspect, parsed.stressImpact);
-            } else if (parsed.type === "token" && parsed.text) {
-              fullResponse += parsed.text;
-              setDisplayText(fullResponse);
-            }
-          } catch { /* skip */ }
-        }
-      }
+      addMessages(selectedSuspectId, [
+        {
+          role: "assistant",
+          content: response.reply,
+          tone: response.tone,
+        },
+      ]);
 
-      const assistantMsg: Message = { role: "assistant", content: fullResponse };
-      addMessages(selectedSuspect, [assistantMsg]);
       setDisplayText("");
-      speakText(fullResponse);
+      setInstinct(response.detective_instinct);
+      void speakText(response.reply);
     } catch {
-      setSpeaking(false);
       setDisplayText("");
-      addMessages(selectedSuspect, [{
-        role: "assistant",
-        content: `${suspect.name} falls silent. The connection was lost.`,
-      }]);
+      setSpeaking(false);
+      addMessages(selectedSuspectId, [
+        {
+          role: "assistant",
+          content: `${suspect.name} goes quiet for a moment. Ask again in plain terms.`,
+          tone: "guarded",
+        },
+      ]);
     } finally {
       setLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, loading, messages, selectedSuspect, discoveredEvidence, stress, addMessages, increaseStress, speakText, suspect.name]);
+  }, [
+    addMessages,
+    increaseStress,
+    input,
+    loading,
+    sessionId,
+    selectedSuspectId,
+    suspect,
+    speakText,
+  ]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  if (!sessionId || !activeSlot || !selectedSuspectId || !suspect) {
+    return null;
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      void sendMessage();
+    }
   };
 
-  const suggested = SUGGESTED_QUESTIONS[selectedSuspect] ?? [];
-  const stressQuestions: Record<SuspectId, string[]> = {
-    fenn: ["I know about your feelings for Victoria.", "A strychnine vial is missing from your bag."],
-    victoria: ["The amended will cuts you out entirely.", "You were seen in the guest wing at 9:10 PM."],
-    oliver: ["We found your debt letter.", "What exactly did you argue about?"],
-  };
-  const highStressQs = stress >= 30 ? stressQuestions[selectedSuspect] : [];
+  const suggestedQuestions = buildSuggestedQuestions(suspect);
 
   return (
     <motion.div
-      className="flex flex-col h-full"
+      className="flex h-full flex-col"
       initial={{ opacity: 0, x: 30 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -30 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
+      <div className="flex items-center justify-between border-b border-white/5 px-5 py-3">
         <button
           onClick={() => goTo("manor")}
-          className="text-[10px] tracking-wider uppercase text-[#445566] hover:text-[#C8D0DC] transition-colors"
+          className="text-[10px] uppercase tracking-wider text-[#445566] transition-colors hover:text-[#C8D0DC]"
         >
-          ← Manor
+          ← Back
         </button>
-        <div className="text-[10px] tracking-[3px] uppercase text-[#D4A843]">Interrogation Room</div>
+        <div className="text-[10px] uppercase tracking-[3px] text-[#D4A843]">Interrogation</div>
         <div className="flex items-center gap-2">
           <div className="text-[9px] text-[#445566]">
             {stress >= 70 ? "Breaking" : stress >= 40 ? "Uneasy" : "Calm"}
           </div>
-          <div className="w-20 h-1 rounded-full bg-white/5 overflow-hidden">
+          <div className="h-1 w-20 overflow-hidden rounded-full bg-white/5">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
@@ -222,12 +275,10 @@ export default function InterrogationRoom() {
         </div>
       </div>
 
-      <div className="flex flex-1 min-h-0">
-        {/* Character panel — 3D model + aura */}
-        <div className="relative w-[36%] flex-shrink-0 h-full border-r border-white/5 overflow-hidden">
-          {/* Subtle spotlight vignette behind model */}
+      <div className="flex min-h-0 flex-1">
+        <div className="relative h-full w-[36%] flex-shrink-0 overflow-hidden border-r border-white/5">
           <div
-            className="absolute inset-0 pointer-events-none"
+            className="pointer-events-none absolute inset-0"
             style={{
               background: stressed
                 ? "radial-gradient(ellipse at 50% 30%, rgba(200,80,40,.08) 0%, transparent 65%)"
@@ -235,133 +286,114 @@ export default function InterrogationRoom() {
               zIndex: 5,
             }}
           />
-
-          {/* 3D canvas */}
-          <AvatarCanvas suspectId={selectedSuspect} speaking={speaking} />
-
-          {/* Sound-wave aura overlay */}
+          <AvatarCanvas
+            speaking={speaking}
+            modelPath={suspect.model_path}
+            modelUrl={suspect.model_url}
+          />
           <SpeakingAura speaking={speaking} />
-
-          {/* Name / status label */}
-          <SuspectLabel suspectId={selectedSuspect} stressed={stressed} />
+          <SuspectLabel suspect={suspect} stressed={stressed} />
         </div>
 
-        {/* Dialogue panel */}
-        <div className="flex flex-col flex-1 min-w-0">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-            {messages.length === 0 && !displayText && (
-              <div className="flex flex-col items-center justify-center h-full text-center gap-3 opacity-50">
-                <div className="text-[10px] tracking-[3px] uppercase text-[#D4A843]">
-                  {suspect.name}
-                </div>
-                <p
-                  className="text-xs italic text-[#445566] max-w-xs leading-relaxed"
-                  style={{ fontFamily: "Georgia, serif" }}
-                >
-                  {selectedSuspect === "fenn" && "Dr. Fenn sits straight in his chair, hands folded. He meets your gaze without blinking."}
-                  {selectedSuspect === "victoria" && "Victoria Harlow is already seated when you enter. She does not look up immediately."}
-                  {selectedSuspect === "oliver" && "Oliver is pacing when you arrive. He stops, runs a hand through his hair."}
-                </p>
-                <p className="text-[9px] text-[#334455]">Type your question below</p>
-              </div>
-            )}
-
-            {messages.map((msg, i) => (
-              <div key={i} className="flex" style={{ justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                {msg.role === "user" ? (
-                  <div
-                    className="max-w-[80%] px-3 py-2 rounded-[8px_8px_2px_8px] text-xs leading-relaxed"
-                    style={{ background: "rgba(212,168,67,.1)", border: "1px solid rgba(212,168,67,.2)", color: "#D4A843" }}
-                  >
-                    {msg.content}
-                  </div>
-                ) : (
-                  <div
-                    className="max-w-[82%] px-3 py-2 rounded-[8px_8px_8px_2px] text-xs leading-relaxed"
-                    style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)", color: "#C8D0DC", fontFamily: "Georgia, serif" }}
-                  >
-                    {msg.content}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {displayText && (
-              <div className="flex justify-start">
-                <div
-                  className="max-w-[82%] px-3 py-2 rounded-[8px_8px_8px_2px] text-xs leading-relaxed"
-                  style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)", color: "#C8D0DC", fontFamily: "Georgia, serif" }}
-                >
-                  {displayText}
-                  <span className="inline-block w-px h-3 bg-[#C8D0DC] ml-0.5 align-middle" style={{ animation: "blink .8s step-end infinite" }} />
-                </div>
-              </div>
-            )}
-
-            {loading && !displayText && (
-              <div className="flex justify-start">
-                <div className="px-3 py-2 text-[11px] italic text-[#334455]">
-                  {suspect.name.split(" ")[0]} considers...
-                </div>
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Input area */}
-          <div className="border-t border-white/5 px-4 py-3">
-            {stress >= 40 && (
-              <div className="mb-2 text-[9px] tracking-wider uppercase text-[#FF9800] opacity-70">
-                {stress >= 70 ? "On the verge of breaking." : "Growing visibly uneasy."}
-              </div>
-            )}
-            <div className="flex gap-2 items-end">
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={loading}
-                placeholder={`Ask ${suspect.name.split(" ").slice(-1)[0]} anything...`}
-                className="flex-1 bg-transparent border rounded-md px-3 py-2 text-xs outline-none transition-colors placeholder:text-[#334455] disabled:opacity-40"
-                style={{ borderColor: loading ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.12)", color: "#C8D0DC", fontFamily: "Georgia, serif" }}
-                autoFocus
-              />
-              <button
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                className="px-4 py-2 rounded-md text-xs font-semibold transition-all disabled:opacity-30"
-                style={{ background: "rgba(212,168,67,.12)", border: "1px solid rgba(212,168,67,.3)", color: "#D4A843" }}
-              >
-                Ask →
-              </button>
-            </div>
-
-            {/* Suggested questions */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {[...suggested, ...highStressQs].map((q) => (
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="border-b border-white/5 px-4 py-2">
+            <div className="text-[10px] uppercase tracking-[2px] text-[#334455]">Suggested prompts</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {suggestedQuestions.map((question) => (
                 <button
-                  key={q}
-                  onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                  disabled={loading}
-                  className="text-[10px] px-2.5 py-1 rounded transition-colors disabled:opacity-30"
-                  style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", color: "#667788" }}
+                  key={question}
+                  onClick={() => setInput(question)}
+                  className="rounded border border-white/10 bg-white/[0.02] px-2 py-1 text-[10px] text-[#8899AA] transition-colors hover:border-[#D4A843]/40 hover:text-[#D4A843]"
                 >
-                  {q}
+                  {question}
                 </button>
               ))}
             </div>
           </div>
+
+          <div className="flex-1 overflow-y-auto px-5 py-4">
+            {messages.length === 0 && !displayText && (
+              <div className="flex h-full items-center justify-center text-center text-xs italic text-[#445566]" style={{ fontFamily: "Georgia, serif" }}>
+                Start questioning {suspect.name}.
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {messages.map((message, index) => (
+                <div
+                  key={`${message.role}-${index}-${message.content.slice(0, 12)}`}
+                  className={`max-w-[85%] rounded-md border px-3 py-2 text-xs leading-relaxed ${
+                    message.role === "user" ? "ml-auto" : ""
+                  }`}
+                  style={{
+                    borderColor:
+                      message.role === "user" ? "rgba(100,140,210,.35)" : "rgba(212,168,67,.28)",
+                    background:
+                      message.role === "user" ? "rgba(100,140,210,.11)" : "rgba(212,168,67,.08)",
+                    color: "#D8DEE8",
+                    fontFamily: "Georgia, serif",
+                  }}
+                >
+                  <div className="mb-1 text-[9px] uppercase tracking-wider text-[#77889A]">
+                    {message.role === "user" ? "Detective" : suspect.name}
+                    {message.tone ? ` · ${message.tone}` : ""}
+                  </div>
+                  {message.content}
+                </div>
+              ))}
+
+              {displayText && (
+                <div
+                  className="max-w-[85%] rounded-md border border-[rgba(212,168,67,.28)] bg-[rgba(212,168,67,.08)] px-3 py-2 text-xs leading-relaxed text-[#D8DEE8]"
+                  style={{ fontFamily: "Georgia, serif" }}
+                >
+                  <div className="mb-1 text-[9px] uppercase tracking-wider text-[#77889A]">{suspect.name}</div>
+                  {displayText}
+                  <span className="ml-1 animate-pulse">▌</span>
+                </div>
+              )}
+
+              {instinct && (
+                <div className="max-w-[95%] rounded border border-[#31506B] bg-[#102033] px-3 py-2 text-[11px] text-[#9EC6E8]">
+                  <div className="mb-1 text-[9px] uppercase tracking-[2px] text-[#6CA8D6]">Detective Instinct</div>
+                  <p className="italic">&quot;{instinct.quote}&quot;</p>
+                  <div className="mt-1 text-[10px] text-[#7EAED0]">
+                    {instinct.source_title} · {instinct.source_author}
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+          </div>
+
+          <div className="border-t border-white/5 px-4 py-3">
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={`Question ${suspect.name}...`}
+                className="flex-1 rounded border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-[#D8DEE8] outline-none placeholder:text-[#445566] focus:border-[#D4A843]/45"
+              />
+              <button
+                onClick={() => {
+                  void sendMessage();
+                }}
+                disabled={loading || !input.trim()}
+                className="rounded border px-4 py-2 text-xs uppercase tracking-[2px] disabled:opacity-45"
+                style={{
+                  borderColor: "rgba(212,168,67,.35)",
+                  background: "rgba(212,168,67,.08)",
+                  color: "#D4A843",
+                }}
+              >
+                {loading ? "Thinking..." : "Send"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes blink { 50% { opacity: 0; } }
-        @keyframes bounce { from { transform: scaleY(0.5); } to { transform: scaleY(1.5); } }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 2px; }
-      `}</style>
     </motion.div>
   );
 }

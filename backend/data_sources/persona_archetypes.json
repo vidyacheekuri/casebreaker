@@ -1,0 +1,68 @@
+[
+  {
+    "id": "controlled_insider",
+    "archetype": "controlled insider",
+    "preferred_roles": ["killer", "primary suspect"],
+    "occupations": ["family solicitor", "estate physician", "business manager", "confidant"],
+    "relationship_styles": ["trusted adviser", "long-time household intimate", "professional protector"],
+    "personality_core": "precise, self-contained, and careful with every word",
+    "speech_style": "measured sentences, restrained emotion, exact phrasing under pressure",
+    "secret_tendencies": ["financial dependency", "unreturned affection", "private collusion"],
+    "visual_cues": "tailored formalwear, still posture, guarded expression, immaculate grooming"
+  },
+  {
+    "id": "shaken_witness",
+    "archetype": "shaken witness",
+    "preferred_roles": ["innocent", "supporting suspect"],
+    "occupations": ["housekeeper", "companion", "teacher", "journalist"],
+    "relationship_styles": ["trusted employee", "family friend", "former protege"],
+    "personality_core": "warm on the surface, but visibly rattled under pressure",
+    "speech_style": "hesitant honesty, details spill out when stressed, apologetic tone",
+    "secret_tendencies": ["planned departure", "private affair", "hidden debt"],
+    "visual_cues": "slightly rumpled clothing, tired eyes, anxious hands, dignified posture"
+  },
+  {
+    "id": "volatile_red_herring",
+    "archetype": "volatile red herring",
+    "preferred_roles": ["innocent", "red herring"],
+    "occupations": ["heir apparent", "artist", "hotel manager", "gardener"],
+    "relationship_styles": ["dependent relative", "old rival", "guest with grievances"],
+    "personality_core": "restless, defensive, and a touch too eager to explain",
+    "speech_style": "fast answers, emotional pivots, bursts of indignation",
+    "secret_tendencies": ["gambling debt", "forged letter", "searching the victim's room"],
+    "visual_cues": "travel-worn formalwear, tense shoulders, expressive face, hurried movements"
+  },
+  {
+    "id": "elegant_mask",
+    "archetype": "elegant mask",
+    "preferred_roles": ["killer", "primary suspect"],
+    "occupations": ["socialite", "widow", "patron", "concert organizer"],
+    "relationship_styles": ["decorative spouse", "social gatekeeper", "former muse"],
+    "personality_core": "cultured, poised, and emotionally unreadable until badly pressed",
+    "speech_style": "formal elegance, dry wit, steady eye contact, clipped denials",
+    "secret_tendencies": ["jealous obsession", "fear of public humiliation", "stolen correspondence"],
+    "visual_cues": "expensive evening dress or immaculate suit, composed gaze, perfect posture"
+  },
+  {
+    "id": "devoted_outsider",
+    "archetype": "devoted outsider",
+    "preferred_roles": ["innocent", "secondary suspect"],
+    "occupations": ["doctor", "music tutor", "secretary", "caretaker"],
+    "relationship_styles": ["quiet admirer", "indispensable aide", "rescued dependent"],
+    "personality_core": "gentle, observant, and burdened by a loyalty they cannot fully admit",
+    "speech_style": "soft but articulate, evasive around the person they protect",
+    "secret_tendencies": ["protecting a suspect", "concealed love", "withheld witness detail"],
+    "visual_cues": "modest formal attire, tired expression, attentive posture, careful hands"
+  },
+  {
+    "id": "ambitious_operator",
+    "archetype": "ambitious operator",
+    "preferred_roles": ["killer", "red herring"],
+    "occupations": ["publisher", "campaign aide", "club secretary", "broker"],
+    "relationship_styles": ["junior partner", "favored employee", "political fixer"],
+    "personality_core": "charming, strategic, and always calculating the social advantage",
+    "speech_style": "polished small talk, quick reframing, persuasive confidence",
+    "secret_tendencies": ["embezzlement", "blackmail arrangement", "forged credentials"],
+    "visual_cues": "stylish period clothing, confident posture, immaculate accessories, alert eyes"
+  }
+]

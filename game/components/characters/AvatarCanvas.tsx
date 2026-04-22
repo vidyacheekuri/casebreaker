@@ -4,42 +4,50 @@ import { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei";
 import CharacterModel from "./CharacterModel";
-import type { SuspectId } from "@/lib/cases/harlow-manor";
 
-const MODEL_PATHS: Record<SuspectId, string> = {
-  fenn:     "/models/fenn.glb",
-  victoria: "/models/victoria.glb",
-  oliver:   "/models/oliver.glb",
-};
+const FALLBACK_MODELS = ["/models/fenn.glb", "/models/victoria.glb", "/models/oliver.glb"];
 
 interface Props {
-  suspectId: SuspectId;
   speaking: boolean;
+  modelPath?: string | null;
+  modelUrl?: string | null;
+}
+
+function normalizeModelUrl(modelPath?: string | null, modelUrl?: string | null): string {
+  const candidate = (modelUrl ?? modelPath ?? "").trim();
+  if (!candidate) {
+    return FALLBACK_MODELS[0];
+  }
+
+  if (candidate.startsWith("http://") || candidate.startsWith("https://")) {
+    return candidate;
+  }
+
+  if (candidate.startsWith("/")) {
+    return candidate;
+  }
+
+  return `/${candidate}`;
 }
 
 function Lights() {
   return (
     <>
       <ambientLight intensity={1.4} />
-      <spotLight
-        position={[0, 4, 2]}
-        intensity={20}
-        angle={0.5}
-        penumbra={0.7}
-        color="#fff8f0"
-      />
+      <spotLight position={[0, 4, 2]} intensity={20} angle={0.5} penumbra={0.7} color="#fff8f0" />
       <pointLight position={[-2, 2, 2]} intensity={5} color="#c7d8ff" />
-      {/* Warm rim from behind to separate subject from background */}
       <pointLight position={[0, 3, -3]} intensity={3} color="#D4A843" />
     </>
   );
 }
 
-export default function AvatarCanvas({ suspectId, speaking }: Props) {
+export default function AvatarCanvas({ speaking, modelPath, modelUrl }: Props) {
   const speakingRef = useRef(speaking);
-  useEffect(() => { speakingRef.current = speaking; }, [speaking]);
+  useEffect(() => {
+    speakingRef.current = speaking;
+  }, [speaking]);
 
-  const url = MODEL_PATHS[suspectId];
+  const url = normalizeModelUrl(modelPath, modelUrl);
 
   return (
     <Canvas

@@ -1,0 +1,139 @@
+"""Accusation verdict agent."""
+
+from __future__ import annotations
+
+import json
+import re
+from typing import Any
+
+from anthropic import Anthropic
+
+from models.world import WorldState
+from utils.config import ANTHROPIC_API_KEY, CLAUDE_MODEL, LLM_RETRY_ATTEMPTS
+from utils.prompts import EVALUATOR_SYSTEM_PROMPT, EVALUATOR_USER_PROMPT
+
+
+def evaluate_accusation(
+    world: WorldState,
+    accused_id: str,
+    reasoning: str,
+) -> dict[str, Any]:
+    """Judge a player accusation against the true world state."""
+    accused = next(
+        (character for character in world.characters if character.character_id == accused_id),
+        None,
+    )
+    killer = next(
+        (character for character in world.characters if character.character_id == world.killer_id),
+        None,
+    )
+    if accused is None or killer is None:
+        raise ValueError("Unknown accused or killer for this slot.")
+
+    correct = accused.character_id == world.killer_id
+
+    claude_result = _call_claude(world, accused_id, accused.name, killer.name, reasoning)
+    if claude_result is None:
+        return {
+            "correct": correct,
+            "verdict_summary": _offline_summary(correct, accused.name, killer.name, world.motive),
+            "missed_clues": _offline_missed_clues(world),
+            "accused_id": accused.character_id,
+            "accused_name": accused.name,
+            "killer_id": killer.character_id,
+            "killer_name": killer.name,
+        }
+
+    return {
+        "correct": correct,
+        "verdict_summary": claude_result.get("verdict_summary", ""),
+        "missed_clues": list(claude_result.get("missed_clues", []))[:3],
+        "accused_id": accused.character_id,
+        "accused_name": accused.name,
+        "killer_id": killer.character_id,
+        "killer_name": killer.name,
+    }
+
+
+def _call_claude(
+    world: WorldState,
+    accused_id: str,
+    accused_name: str,
+    killer_name: str,
+    reasoning: str,
+) -> dict[str, Any] | None:
+    if not ANTHROPIC_API_KEY:
+        return None
+
+    evidence_block = "\n".join(
+        f"- {evidence.name} ({evidence.location}) implicates {evidence.implicates}. {evidence.description}"
+        for evidence in world.evidence
+    )
+    timeline_block = "\n".join(
+        f"- {event.get('time', '')}: {event.get('event', '')}"
+        for event in world.timeline
+    )
+
+    user_prompt = EVALUATOR_USER_PROMPT.format(
+        accused_id=accused_id,
+        accused_name=accused_name,
+        killer_id=world.killer_id,
+        killer_name=killer_name,
+        motive=world.motive,
+        reasoning=reasoning.strip() or "(no reasoning provided)",
+        evidence_block=evidence_block,
+        timeline_block=timeline_block,
+    )
+
+    try:
+        client = Anthropic(api_key=ANTHROPIC_API_KEY)
+        for _attempt in range(LLM_RETRY_ATTEMPTS):
+            try:
+                response = client.messages.create(
+                    model=CLAUDE_MODEL,
+                    system=EVALUATOR_SYSTEM_PROMPT,
+                    max_tokens=600,
+                    temperature=0.4,
+                    messages=[{"role": "user", "content": user_prompt}],
+                )
+                text = _strip_fences(_response_text(response))
+                return json.loads(text)
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return None
+
+
+def _offline_summary(correct: bool, accused_name: str, killer_name: str, motive: str) -> str:
+    if correct:
+        return (
+            f"{accused_name} was the killer. {motive.strip() or 'The motive lines up with the evidence.'} "
+            "The accusation holds."
+        )
+    return (
+        f"{accused_name} was not the killer. The real killer was {killer_name}. "
+        f"{motive.strip() or 'The real motive connects to evidence the player did not press on.'}"
+    )
+
+
+def _offline_missed_clues(world: WorldState) -> list[str]:
+    clues: list[str] = []
+    for evidence in world.evidence:
+        if evidence.implicates == world.killer_id and not evidence.is_red_herring:
+            clues.append(f"{evidence.name} in the {evidence.location}: {evidence.description}")
+        if len(clues) >= 3:
+            break
+    return clues
+
+
+def _response_text(response: Any) -> str:
+    return "".join(getattr(block, "text", "") for block in response.content).strip()
+
+
+def _strip_fences(text: str) -> str:
+    text = text.strip()
+    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+    if match:
+        return match.group(1).strip()
+    return text

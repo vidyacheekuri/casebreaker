@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "@aws-sdk/client-polly": "^3.1030.0"
-  }
-}

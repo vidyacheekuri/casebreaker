@@ -1,0 +1,148 @@
+CaseBreaker: Phase-by-Phase Implementation Plan
+Context
+The /game directory has a fully working Next.js app with one hardcoded mystery (Harlow Manor). The PLAN.md describes extending this into a daily multi-case pipeline with a FastAPI backend. The old Python backend was deleted; we are building it fresh. User wants to work phase by phase and verify each phase before proceeding.
+
+Tech decisions locked in:
+
+LLM: claude-haiku-4-5-20251001 for all backend generation + interrogation
+Interrogation max_tokens: 120 (story generation stays at 3000–4000 to fit full JSON)
+Backend: /backend directory in same repo alongside /game
+RAG: Include ChromaDB from Phase 1 (world state Layer 1 + Gutenberg Layer 2)
+DB: SQLite via aiosqlite
+Timing estimate: ~5–10 min total for 3 daily stories (Tripo runs parallel across stories)
+Current State
+/game — Next.js 16, hardcoded Harlow Manor case, Claude Haiku interrogation, ElevenLabs TTS, pre-cached Tripo .glb models
+No backend exists; all deleted files are staged (not committed)
+API keys in /game/.env.local: ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, TRIPO_API_KEY
+Phase 1: Backend Foundation + Story Generation
+Goal: Generate 3 daily mystery slots and expose them via API. Verify before moving on.
+
+Files to create under /backend/
+backend/
+├── main.py                        # FastAPI app + APScheduler lifespan
+├── requirements.txt               # fastapi, uvicorn, anthropic, chromadb, aiosqlite, apscheduler, python-dotenv
+├── .env                           # Copy ANTHROPIC_API_KEY etc. from /game/.env.local
+├── models/
+│   ├── world.py                   # Pydantic: Victim, Character, Evidence, WorldState
+│   └── session.py                 # Pydantic: SessionState, DetectiveInstinct, DailySlot
+├── db/
+│   ├── database.py                # aiosqlite connection + init tables
+│   └── schema.sql                 # Tables: daily_slots, suspects, evidence, asset_status, keywords, sessions
+├── agents/
+│   ├── architect.py               # Claude: generate 3 WorldState objects in one batch job
+│   └── consistency.py             # Validate WorldState; regenerate failed sections
+├── rag/
+│   ├── chroma_client.py           # Singleton ChromaDB client
+│   ├── world_embedder.py          # Embed WorldState (chars, evidence, timeline) into ChromaDB
+│   ├── literary_embedder.py       # Embed Gutenberg corpus into 'literary_corpus' collection
+│   ├── world_retriever.py         # Layer 1: query world context by character/evidence
+│   └── literary_retriever.py     # Layer 2: query literary passages for Detective's Instinct
+├── scripts/
+│   └── ingest_gutenberg.py        # One-time: download mystery texts from Gutenberg, chunk, embed
+├── api/
+│   └── routes.py                  # POST /admin/generate-daily-slots, GET /daily-slots
+├── utils/
+│   ├── config.py                  # Constants: model ID, thresholds, cron schedule
+│   ├── prompts.py                 # Architect system prompt, consistency prompts
+│   └── novelty_guard.py          # Fingerprint stories; reject near-duplicates from prior days
+└── scheduler/
+    └── daily_job.py               # Midnight job: generate 3 slots → embed → store → publish
+Architecture notes
+architect.py: Single Claude call asking for all 3 mystery worlds in one structured JSON response. Retries up to 5× if consistency fails.
+consistency.py: Re-uses the logic from the deleted backend — checks killer alibi, innocent alibis, evidence sources, motive coherence.
+novelty_guard.py: Store per-slot fingerprint (setting hash + killer pattern + motive family + summary embedding). Cosine distance < 0.3 from any prior slot → regenerate.
+daily_job.py: runs at midnight UTC; generates 3 slots serially; embeds each into its own ChromaDB collection world_{slot_id}; publishes only fully valid slots.
+world_embedder.py: Chunks character profiles, timeline events, evidence descriptions → embed with text-embedding-3-small or Claude's embeddings.
+literary_embedder.py: Gutenberg corpus (20–30 mystery texts) → chunked, embedded into literary_corpus collection. Run once via scripts/ingest_gutenberg.py.
+Verification
+cd backend && uvicorn main:app --reload
+curl -X POST http://localhost:8000/admin/generate-daily-slots
+curl http://localhost:8000/daily-slots
+Expected: GET returns { slots: [...3 items...], generated_at: "...", expires_at: "..." }. Each slot has slot_id, title, setting, suspects (3), evidence (5–7), victim.
+
+Phase 2: Keyword System
+Goal: Extract dynamic keywords from today's 3 stories; match user selections to best slot.
+
+Changes
+backend/agents/keyword_extractor.py — Claude call after generation: extract 10–15 keyword chips (setting, motive type, relationship dynamic, clue style, emotional tone, era) from the 3 combined stories. Return as { keywords: [{id, label, category}] }.
+backend/db/schema.sql — Add keywords table: (keyword_id, label, category, slot_scores JSON, date)
+backend/api/routes.py — Update GET /daily-slots to include daily_keywords array; add POST /daily-slots/match (body: {selected_keyword_ids: [...]}).
+Matching logic: Score each slot by how many of its story features map to selected keywords → return { matched_slot_id, slot_summary }.
+Verification
+curl http://localhost:8000/daily-slots | jq '.daily_keywords'
+curl -X POST http://localhost:8000/daily-slots/match \
+  -H 'Content-Type: application/json' \
+  -d '{"selected_keyword_ids": ["kw_1", "kw_3"]}'
+Expected: 10–15 keywords returned; match endpoint returns one of the 3 slot IDs with reasoning.
+
+Phase 3: Asset Pipeline
+Goal: Generate Tripo 3D models and assign ElevenLabs voices before publishing each slot.
+
+Changes
+backend/services/tripo_service.py — Async Tripo V2 API: POST generate task → poll → download .glb → save to game/public/models/generated/{slot_id}/{character_id}.glb. Retry up to 3×; fallback = copy one of the existing cached models (fenn.glb, victoria.glb, oliver.glb) based on gender/age match.
+backend/services/voice_matcher.py — Curated voice bank (hardcoded dict of 10–15 ElevenLabs voice IDs with age/gender/tone metadata). Score voices against suspect profile; assign best fit. Fallback = default voice per age+gender bucket.
+backend/db/schema.sql — asset_status table: (slot_id, character_id, model_path, voice_id, model_status, voice_status, retry_count).
+Update daily_job.py — After story generation: run asset pipeline for each suspect; update asset_status; publish slot only if ≥2/3 suspects have playable assets (fallbacks count).
+Update GET /daily-slots response — Include suspects[].model_url and suspects[].voice_id.
+Verification
+curl -X POST http://localhost:8000/admin/generate-daily-slots
+curl http://localhost:8000/daily-slots | jq '.slots[0].suspects[].model_url'
+ls game/public/models/generated/
+Expected: .glb files present on disk; model_url paths point to them; voice_ids are real ElevenLabs IDs.
+
+Phase 4: Session & Interrogation
+Goal: Dynamic Claude interrogation using ChromaDB world context; full session lifecycle.
+
+Changes
+backend/agents/character.py — Per-suspect interrogation: query world_{slot_id} ChromaDB collection for character profile + relevant evidence → build context → Claude streaming response. Also query literary_corpus for Detective's Instinct if similarity ≥ 0.75.
+backend/agents/evaluator.py — Evaluate final accusation: retrieve WorldState from SQLite; compare accused vs. killer_id; Claude explains verdict + missed clues.
+backend/api/routes.py — Add endpoints:
+POST /sessions/start — body: {slot_id}; return {session_id}
+POST /sessions/{id}/interrogate — body: {character_id, message}; return {response, character_name, detective_instinct?}
+GET /sessions/{id}/state — return current session state
+POST /sessions/{id}/accuse — body: {character_id, reasoning}; return verdict
+backend/db/schema.sql update — sessions table: (session_id, slot_id, started_at, state JSON)
+Verification
+SESSION=$(curl -s -X POST http://localhost:8000/sessions/start \
+  -H 'Content-Type: application/json' \
+  -d '{"slot_id": "<slot_id_from_phase1>"}' | jq -r '.session_id')
+curl -X POST http://localhost:8000/sessions/$SESSION/interrogate \
+  -H 'Content-Type: application/json' \
+  -d '{"character_id": "suspect_1", "message": "Where were you at 9pm?"}'
+Expected: In-character response ≤ 4 sentences; occasionally includes detective_instinct quote; accusation returns correct: true/false with explanation.
+
+Phase 5: Frontend Integration
+Goal: Replace all hardcoded /game constants with dynamic backend data. Full E2E flow.
+
+Changes in /game
+game/lib/api.ts — Typed API client: getDailySlots(), matchKeywords(ids), startSession(slotId), interrogate(sessionId, characterId, message), getState(sessionId), accuse(sessionId, characterId, reasoning).
+game/lib/store.ts — Add: dailySlots, dailyKeywords, selectedKeywords, currentSlot, sessionId state fields.
+game/app/page.tsx — On load: fetch /daily-slots; show keyword selection screen or slot browser.
+game/components/screens/KeywordSelectionScreen.tsx — New screen: display keyword chips; submit → call match API → navigate to matched slot.
+game/components/screens/SlotSelectionScreen.tsx — New screen: show 3 mystery cards with title/setting/mood; click to pick one directly.
+game/app/api/interrogate/route.ts — Update to proxy to POST /sessions/{id}/interrogate (pass dynamic voice IDs and world context from backend; keep streaming).
+game/app/api/speak/route.ts — Use voice_id from session/slot data instead of hardcoded voice IDs.
+Remove hardcoded dependency on game/lib/cases/harlow-manor.ts (keep file for fallback/demo mode toggle).
+Screen flow after Phase 5
+Landing → KeywordSelection (or SlotBrowser) → Cinematic → Manor → Interrogation → Accusation → Verdict
+Verification
+Start both servers (backend + game/)
+Open browser, confirm keyword chips load from backend
+Select keywords → verify routing to one of the 3 generated slots
+Play full interrogation → make accusation → verify verdict uses generated story truth
+Confirm no static Harlow Manor data is used (can be toggled via env flag for demo fallback)
+Critical files (reference for each phase)
+Phase	Key files
+1	backend/agents/architect.py, backend/rag/world_embedder.py, backend/scheduler/daily_job.py, backend/api/routes.py
+2	backend/agents/keyword_extractor.py, backend/api/routes.py (match endpoint)
+3	backend/services/tripo_service.py, backend/services/voice_matcher.py, backend/scheduler/daily_job.py
+4	backend/agents/character.py, backend/agents/evaluator.py, backend/api/routes.py (session endpoints)
+5	game/lib/api.ts, game/lib/store.ts, game/app/page.tsx, game/components/screens/KeywordSelectionScreen.tsx
+Reuse from deleted backend (recoverable via git show HEAD:<path>)
+casebreaker/backend/models/world.py — Pydantic WorldState models (port to new models/world.py)
+casebreaker/backend/models/session.py — SessionState, DetectiveInstinct
+casebreaker/backend/agents/consistency.py — Consistency checks (swap OpenAI → Claude)
+casebreaker/backend/agents/evaluator.py — Verdict logic (swap OpenAI → Claude)
+casebreaker/backend/utils/prompts.py — Prompt templates (update for Claude)
+casebreaker/backend/rag/chroma_client.py — ChromaDB singleton pattern
+
