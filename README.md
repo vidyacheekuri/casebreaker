@@ -180,5 +180,3 @@ Character preview (add as needed in `character-preview/.env.local`):
 
 ---
 
-## License
-TBD — private prototype.
