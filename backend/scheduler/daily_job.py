@@ -18,6 +18,7 @@ from models.world import Character, WorldState
 from rag.world_embedder import embed_world
 from services.tripo_service import TripoModelResult, generate_character_model_asset
 from services.voice_matcher import match_voice_for_character
+from utils.config import MAX_GENERATION_RETRIES
 from utils.novelty_guard import detect_duplicate
 
 
@@ -37,14 +38,16 @@ async def generate_daily_slots(connection) -> dict:
     for world in await generate_daily_worlds(case_date):
         novelty = detect_duplicate(world, prior_fingerprints + list(fingerprints.values()))
         if novelty.is_duplicate:
-            refreshed = generate_slot_world(case_date, world.slot_index, variant_seed=1)
-            retry_novelty = detect_duplicate(
-                refreshed,
-                prior_fingerprints + list(fingerprints.values()),
-            )
-            if not retry_novelty.is_duplicate:
-                world = refreshed
-                novelty = retry_novelty
+            for variant_seed in range(1, MAX_GENERATION_RETRIES + 1):
+                refreshed = generate_slot_world(case_date, world.slot_index, variant_seed=variant_seed)
+                retry_novelty = detect_duplicate(
+                    refreshed,
+                    prior_fingerprints + list(fingerprints.values()),
+                )
+                if not retry_novelty.is_duplicate:
+                    world = refreshed
+                    novelty = retry_novelty
+                    break
         accepted_worlds.append(world)
         fingerprints[world.slot_id] = novelty.fingerprint
         embed_world(world)

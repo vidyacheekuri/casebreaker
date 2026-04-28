@@ -20,6 +20,11 @@ Hard requirements:
   2. Persona archetypes define the three suspects' roles, speech tendencies, visual cues, and secret tendencies.
   3. Gutenberg literary references define tone, red-herring structure, clue emphasis, and atmosphere.
 - Treat the source data as constraints, not decoration. The final story should clearly reflect all three layers.
+- Follow the supplied case_recipe exactly for setting, mood, victim role, killer pressure, clue styles, red-herring strategy, and narrative twist.
+- Each suspect must preserve one selected persona archetype and its speech_style.
+- Each suspect must have a distinct emotional_tell, lie_strategy, private_wound, pressure_response, and relationship_to_other_suspects.
+- At least 3 evidence items must visibly use the selected clue_styles from the case_recipe.
+- The red herring must follow the case_recipe red_herring_strategy.
 - Do not describe procedural harm instructions. Focus on narrative and clues.
 
 Return this exact JSON shape (no wrapper key):
@@ -44,6 +49,12 @@ Return this exact JSON shape (no wrapper key):
       "knowledge": ["string", "string"],
       "is_killer": false,
       "archetype": "string",
+      "speech_style": "string (from the selected persona archetype)",
+      "emotional_tell": "string (specific behavior under pressure)",
+      "lie_strategy": "string (how this suspect avoids or reveals truth)",
+      "private_wound": "string (emotional stake, not just a secret)",
+      "pressure_response": "string (how speech/body language changes when pressed)",
+      "relationship_to_other_suspects": "string (1 sentence)",
       "gender_presentation": "male, female, or neutral",
       "appearance": "string (1-2 sentences for 3D model generation)"
     }
@@ -57,7 +68,25 @@ Return this exact JSON shape (no wrapper key):
       "is_red_herring": false
     }
   ],
-  "red_herrings": ["string"]
+  "red_herrings": ["string"],
+  "case_recipe": {
+    "subgenre": "string",
+    "setting": "string",
+    "mood": "string",
+    "motive_family": "string",
+    "victim_role": "string",
+    "central_conflict": "string",
+    "killer_pressure": "string",
+    "clue_styles": ["string"],
+    "red_herring_strategy": "string",
+    "narrative_twist": "string",
+    "forbidden_repeats": ["string"]
+  },
+  "generation_sources": {
+    "fbi_id": "string",
+    "persona_ids": ["string"],
+    "literary_ids": ["string"]
+  }
 }
 """
 
@@ -66,6 +95,15 @@ ARCHITECT_SINGLE_USER_PROMPT = """Generate one murder mystery for UTC date {case
 Setting: {setting}
 Mood: {mood}
 Required motive family: {motive_family}
+
+Selected source choices:
+{selected_context}
+
+Case recipe to follow exactly:
+{case_recipe}
+
+Generation source ids to return exactly:
+{generation_sources}
 
 FBI-style story priors:
 {fbi_context}
@@ -78,8 +116,10 @@ Project Gutenberg style and clue references:
 
 Make this story feel distinct while staying faithful to the supplied priors and references.
 Use the selected persona archetypes directly when building suspect personalities, secrets, and appearances.
+Copy each persona's speech_style into the matching suspect and make the actual dialogue traits meaningfully different across suspects.
 Set gender_presentation explicitly for each suspect based on their name, role, and relationship, and make the appearance match it.
 Let the literary references influence atmosphere, clue logic, and the kind of red herring you introduce.
+Return the provided case_recipe and generation_sources in the JSON output.
 Keep all prose in plain modern English that a player can read quickly.
 Return only the JSON object. No extra text."""
 
@@ -202,6 +242,12 @@ Character brief:
 - Occupation: {occupation}
 - Relationship to the victim: {relationship}
 - Personality: {personality}
+- Speech style: {speech_style}
+- Emotional tell: {emotional_tell}
+- Lie strategy: {lie_strategy}
+- Private wound: {private_wound}
+- Pressure response: {pressure_response}
+- Relationship to other suspects: {relationship_to_other_suspects}
 - Your public alibi: {alibi}
 - Is your alibi actually true: {alibi_true}
 - Your secret: {secret}
@@ -214,6 +260,8 @@ World facts you have access to (use only what your character would plausibly kno
 Hard rules:
 - Respond in 1-4 short sentences. Plain modern English, not archaic.
 - Never list facts as bullet points. Speak naturally.
+- Let the speech style shape rhythm and word choice without becoming a caricature.
+- Show the emotional tell subtly when the detective presses on your wound, lie, alibi, or relationships.
 - If you are the killer, deflect and protect your lie, but do not confess unless cornered by specific evidence the player cites.
 - If you are innocent, you may be defensive or emotional but you should not fabricate false evidence against others.
 - Do not invent characters, locations, or evidence that contradict the supplied world facts.
@@ -264,3 +312,34 @@ Timeline:
 {timeline_block}
 
 Return only the JSON object."""
+
+
+TRIPO_PROMPT_SYSTEM_PROMPT = """You write highly detailed text-to-3D character prompts for Tripo.
+
+Return one prompt only. No markdown, no labels, no bullet points.
+
+The prompt must describe a full-body human game character suitable for a mystery interrogation scene.
+Prioritize visible form: age impression, face, hair, clothing, silhouette, posture, expression, accessories, material texture, and production constraints.
+Do not include story spoilers, guilt, murder details, alibi details, or invisible psychology.
+Do not ask for text, props with readable writing, multiple people, background scenery, or a cinematic scene.
+Keep it 90-140 words.
+End with these requirements in natural prose: photorealistic human, realistic proportions, detailed facial features, high-quality PBR textures, neutral T-pose, full body visible, animation-ready face rig.
+"""
+
+
+TRIPO_PROMPT_USER_PROMPT = """Create a Tripo text-to-3D prompt for this CaseBreaker suspect.
+
+Character:
+- Name: {name}
+- Age: {age}
+- Gender presentation: {gender_presentation}
+- Occupation: {occupation}
+- Relationship to victim: {relationship}
+- Archetype: {archetype}
+- Personality: {personality}
+- Speech style: {speech_style}
+- Emotional tell: {emotional_tell}
+- Pressure response: {pressure_response}
+- Appearance source: {appearance}
+
+Return only the final Tripo prompt."""

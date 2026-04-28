@@ -55,6 +55,24 @@ def generate_text(
     return None
 
 
+def generate_claude_text(
+    *,
+    system: str,
+    user: str,
+    max_tokens: int,
+    temperature: float = 0.7,
+) -> str | None:
+    """Generate text with Claude specifically, returning None if unavailable."""
+    if not ANTHROPIC_API_KEY:
+        return None
+    return _generate_anthropic(
+        system=system,
+        user=user,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
+
+
 def generate_json(
     *,
     system: str,

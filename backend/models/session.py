@@ -6,7 +6,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .world import Character, Evidence, Victim
+from .world import CaseRecipe, Character, Evidence, GenerationSources, Victim
 
 
 class DetectiveInstinct(BaseModel):
@@ -59,6 +59,8 @@ class DailySlot(BaseModel):
     victim: Victim
     suspects: list[Character]
     evidence: list[Evidence]
+    case_recipe: CaseRecipe | None = None
+    generation_sources: GenerationSources | None = None
     world_collection: str
 
 

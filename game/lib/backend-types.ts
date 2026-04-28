@@ -18,6 +18,12 @@ export interface SuspectDto {
   knowledge: string[];
   is_killer: boolean;
   archetype: string;
+  speech_style?: string;
+  emotional_tell?: string;
+  lie_strategy?: string;
+  private_wound?: string;
+  pressure_response?: string;
+  relationship_to_other_suspects?: string;
   gender_presentation?: string | null;
   appearance: string;
   model_url: string | null;
@@ -37,6 +43,26 @@ export interface EvidenceDto {
   image_status?: string;
 }
 
+export interface CaseRecipeDto {
+  subgenre: string;
+  setting: string;
+  mood: string;
+  motive_family: string;
+  victim_role: string;
+  central_conflict: string;
+  killer_pressure: string;
+  clue_styles: string[];
+  red_herring_strategy: string;
+  narrative_twist: string;
+  forbidden_repeats: string[];
+}
+
+export interface GenerationSourcesDto {
+  fbi_id: string;
+  persona_ids: string[];
+  literary_ids: string[];
+}
+
 export interface DailySlotDto {
   slot_id: string;
   slot_index: number;
@@ -50,6 +76,8 @@ export interface DailySlotDto {
   victim: VictimDto;
   suspects: SuspectDto[];
   evidence: EvidenceDto[];
+  case_recipe?: CaseRecipeDto | null;
+  generation_sources?: GenerationSourcesDto | null;
   world_collection: string;
 }
 

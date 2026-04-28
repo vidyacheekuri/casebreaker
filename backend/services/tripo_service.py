@@ -14,8 +14,10 @@ from urllib.request import Request, urlopen
 
 import certifi
 
+from agents.llm_provider import generate_claude_text
 from models.world import Character
-from utils.config import GAME_ROOT, TRIPO_API_KEY
+from utils.config import GAME_ROOT, TRIPO_API_KEY, TRIPO_MANUAL_MODE, TRIPO_PROMPT_DIR, TRIPO_REMOTE_ENABLED
+from utils.prompts import TRIPO_PROMPT_SYSTEM_PROMPT, TRIPO_PROMPT_USER_PROMPT
 
 TRIPO_BASE_URL = "https://api.tripo3d.ai/v2/openapi"
 _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
@@ -44,7 +46,7 @@ def generate_character_model_asset(
     character: Character,
     max_retries: int = 3,
 ) -> TripoModelResult:
-    """Generate one suspect model through Tripo, with fallback asset copy."""
+    """Resolve one suspect model, defaulting to placeholder fallback assets."""
     target_model_path = f"/models/generated/{slot_id}/{character.character_id}.glb"
     target_abs = _public_model_abs_path(target_model_path)
 
@@ -60,11 +62,31 @@ def generate_character_model_asset(
             task_id="local-cache",
         )
 
-    prompt = _build_tripo_prompt(character)
     retry_count = 0
     last_error: str | None = None
 
-    if TRIPO_API_KEY:
+    if TRIPO_MANUAL_MODE:
+        prompt, prompt_source = _build_tripo_prompt(character)
+        prompt_paths = _write_manual_prompt_files(
+            slot_id=slot_id,
+            character=character,
+            prompt=prompt,
+            prompt_source=prompt_source,
+            target_model_path=target_model_path,
+        )
+        return _fallback_model_result(
+            slot_id=slot_id,
+            character=character,
+            target_model_path=target_model_path,
+            target_abs=target_abs,
+            retry_count=0,
+            status="manual_prompt",
+            task_id="manual-prompt",
+            error=f"Manual Tripo prompt written to {prompt_paths['prompt']}",
+        )
+
+    if TRIPO_REMOTE_ENABLED and TRIPO_API_KEY:
+        prompt, _prompt_source = _build_tripo_prompt(character)
         for attempt in range(1, max_retries + 1):
             retry_count = attempt - 1
             try:
@@ -85,6 +107,29 @@ def generate_character_model_asset(
             except Exception as exc:
                 last_error = str(exc)
 
+    return _fallback_model_result(
+        slot_id=slot_id,
+        character=character,
+        target_model_path=target_model_path,
+        target_abs=target_abs,
+        retry_count=retry_count,
+        status="placeholder",
+        task_id="placeholder",
+        error=last_error,
+    )
+
+
+def _fallback_model_result(
+    *,
+    slot_id: str,
+    character: Character,
+    target_model_path: str,
+    target_abs: Path,
+    retry_count: int,
+    status: str,
+    task_id: str,
+    error: str | None,
+) -> TripoModelResult:
     fallback_path = _pick_fallback_model(character)
     try:
         _copy_fallback_model(fallback_path, target_abs)
@@ -94,10 +139,10 @@ def generate_character_model_asset(
             model_path=target_model_path,
             model_url=target_model_path,
             source="fallback",
-            model_status="fallback",
+            model_status=status,
             retry_count=retry_count,
-            task_id="fallback",
-            error=last_error,
+            task_id=task_id,
+            error=error,
         )
     except Exception as exc:
         return TripoModelResult(
@@ -109,7 +154,7 @@ def generate_character_model_asset(
             model_status="failed",
             retry_count=retry_count,
             task_id=None,
-            error=str(exc) if last_error is None else f"{last_error}; fallback={exc}",
+            error=str(exc) if error is None else f"{error}; fallback={exc}",
         )
 
 
@@ -380,6 +425,50 @@ def _copy_fallback_model(fallback_model_path: str, destination: Path) -> None:
     raise RuntimeError("No valid fallback GLB found in game/public/models.")
 
 
+def _write_manual_prompt_files(
+    *,
+    slot_id: str,
+    character: Character,
+    prompt: str,
+    prompt_source: str,
+    target_model_path: str,
+) -> dict[str, str]:
+    slot_dir = TRIPO_PROMPT_DIR / slot_id
+    slot_dir.mkdir(parents=True, exist_ok=True)
+    base_name = f"{character.character_id}-{_slug(character.name)}"
+    prompt_path = slot_dir / f"{base_name}.txt"
+    metadata_path = slot_dir / f"{base_name}.json"
+    prompt_path.write_text(prompt + "\n", encoding="utf-8")
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "slot_id": slot_id,
+                "character_id": character.character_id,
+                "name": character.name,
+                "target_model_path": target_model_path,
+                "target_absolute_path": str(_public_model_abs_path(target_model_path)),
+                "prompt": prompt,
+                "prompt_source": prompt_source,
+                "tripo_settings": {
+                    "type": "text_to_model",
+                    "model_version": "v3.0-20250812",
+                    "texture": True,
+                    "pbr": True,
+                    "face_rig": True,
+                    "workflow": "animation",
+                    "download_format": "glb",
+                },
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    return {
+        "prompt": str(prompt_path),
+        "metadata": str(metadata_path),
+    }
+
+
 def _is_valid_glb(path: Path) -> bool:
     if not path.exists() or not path.is_file():
         return False
@@ -391,17 +480,76 @@ def _is_valid_glb(path: Path) -> bool:
 
 _TRIPO_STYLE_SUFFIX = (
     " Photorealistic human, realistic proportions, detailed facial features, "
-    "high-quality textures, neutral T-pose, full body visible."
+    "high-quality PBR textures, neutral T-pose, full body visible, animation-ready face rig."
 )
 
-def _build_tripo_prompt(character: Character) -> str:
+def _build_tripo_prompt(character: Character) -> tuple[str, str]:
+    claude_prompt = _build_tripo_prompt_with_claude(character)
+    if claude_prompt:
+        return claude_prompt, "claude"
+    return _build_local_tripo_prompt(character), "local_fallback"
+
+
+def _build_tripo_prompt_with_claude(character: Character) -> str | None:
+    prompt = generate_claude_text(
+        system=TRIPO_PROMPT_SYSTEM_PROMPT,
+        user=TRIPO_PROMPT_USER_PROMPT.format(
+            name=character.name,
+            age=character.age,
+            gender_presentation=character.gender_presentation or "neutral",
+            occupation=character.occupation,
+            relationship=character.relationship_to_victim,
+            archetype=character.archetype or "mystery suspect",
+            personality=character.personality,
+            speech_style=character.speech_style or "guarded, natural speech",
+            emotional_tell=character.emotional_tell or "subtle tension under pressure",
+            pressure_response=character.pressure_response or "controlled posture under scrutiny",
+            appearance=character.appearance or "period-appropriate mystery suspect",
+        ),
+        max_tokens=260,
+        temperature=0.45,
+    )
+    if not prompt:
+        return None
+    cleaned = _clean_prompt_text(prompt)
+    if len(cleaned.split()) < 50:
+        return None
+    return cleaned
+
+
+def _build_local_tripo_prompt(character: Character) -> str:
     base = character.appearance.strip() or (
         f"Realistic full-body character, {character.age}-year-old {character.occupation}. "
         f"Personality: {character.personality}. "
         f"Archetype: {character.archetype or 'mystery suspect'}. "
         "Practical period-appropriate clothing."
     )
-    return base + _TRIPO_STYLE_SUFFIX
+    voice_detail = " ".join(
+        part
+        for part in (
+            f"Age impression: {character.age}.",
+            f"Gender presentation: {character.gender_presentation}." if character.gender_presentation else "",
+            f"Occupation: {character.occupation}.",
+            f"Archetype: {character.archetype}." if character.archetype else "",
+            f"Expression and posture should suggest {character.emotional_tell}." if character.emotional_tell else "",
+            f"Body language: {character.pressure_response}." if character.pressure_response else "",
+            "Design as a single full-body mystery-game suspect with no background scene, no text, and no extra people.",
+        )
+        if part
+    )
+    return f"{base} {voice_detail}{_TRIPO_STYLE_SUFFIX}"
+
+
+def _clean_prompt_text(prompt: str) -> str:
+    cleaned = re.sub(r"```(?:text)?|```", "", prompt).strip()
+    cleaned = re.sub(r"^(prompt|tripo prompt)\s*:\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" \"'")
+    return cleaned
+
+
+def _slug(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return slug or "character"
 
 
 def _is_image_url(value: str) -> bool:
@@ -414,4 +562,3 @@ def _is_glb_or_gltf_url(value: str) -> bool:
 
 def _is_fbx_url(value: str) -> bool:
     return re.search(r"\.fbx(\?|$)", value, re.IGNORECASE) is not None
-

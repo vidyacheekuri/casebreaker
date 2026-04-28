@@ -33,17 +33,29 @@ def select_story_grounding(case_date: str, slot_index: int, variant_seed: int = 
     rng = random.Random(f"{case_date}:grounding:{slot_index}:{variant_seed}")
     fbi_patterns = load_fbi_patterns()
     personas = load_persona_archetypes()
-    rng.shuffle(fbi_patterns)
+    fbi_rng = random.Random(f"{case_date}:fbi-order:{variant_seed}")
+    fbi_rng.shuffle(fbi_patterns)
     fbi_entry = fbi_patterns[(slot_index - 1) % len(fbi_patterns)]
 
     shuffled_personas = personas[:]
     rng.shuffle(shuffled_personas)
     selected_personas = shuffled_personas[:3]
 
+    selected_setting = rng.choice(fbi_entry["settings"])
+    selected_mood = rng.choice(fbi_entry["emotional_tones"])
+    selected_victim_role = rng.choice(fbi_entry["victim_roles"])
+    selected_pressure = rng.choice(fbi_entry["suspect_pressures"])
+    selected_relationship_pattern = rng.choice(fbi_entry["relationship_patterns"])
+    clue_styles = fbi_entry["clue_styles"][:]
+    rng.shuffle(clue_styles)
+    selected_clue_styles = clue_styles[: min(3, len(clue_styles))]
+
     literary_refs = query_literary_references(
         [
             fbi_entry["motive_family"],
-            *fbi_entry["relationship_patterns"][:2],
+            selected_relationship_pattern,
+            selected_pressure,
+            *selected_clue_styles,
             *[persona["archetype"] for persona in selected_personas],
         ],
         limit=3,
@@ -53,6 +65,14 @@ def select_story_grounding(case_date: str, slot_index: int, variant_seed: int = 
         "fbi": fbi_entry,
         "personas": selected_personas,
         "literary_refs": literary_refs,
+        "selected": {
+            "setting": selected_setting,
+            "mood": selected_mood,
+            "victim_role": selected_victim_role,
+            "killer_pressure": selected_pressure,
+            "relationship_pattern": selected_relationship_pattern,
+            "clue_styles": selected_clue_styles,
+        },
     }
 
 
@@ -65,9 +85,22 @@ def build_generation_context(case_date: str, slot_index: int, variant_seed: int 
 
     return {
         "motive_family": fbi_entry["motive_family"],
+        "selected": grounding["selected"],
+        "generation_sources": {
+            "fbi_id": fbi_entry.get("id", ""),
+            "persona_ids": [persona.get("id", "") for persona in personas],
+            "literary_ids": [
+                ref.get("id")
+                or ref.get("source_title")
+                or ref.get("title")
+                or f"literary_ref_{index}"
+                for index, ref in enumerate(literary_refs, start=1)
+            ],
+        },
         "fbi_context": json.dumps(fbi_entry, indent=2),
         "persona_context": json.dumps(personas, indent=2),
         "literary_context": json.dumps(literary_refs, indent=2),
+        "selected_context": json.dumps(grounding["selected"], indent=2),
         "raw": grounding,
     }
 
@@ -96,6 +129,7 @@ def query_literary_references(terms: list[str], limit: int = 3) -> list[dict]:
     passages = load_gutenberg_passages()[:limit]
     return [
         {
+            "id": passage.get("id", ""),
             "text": passage["text"],
             "source_title": passage["source_title"],
             "source_author": passage["source_author"],

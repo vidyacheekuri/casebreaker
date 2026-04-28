@@ -101,6 +101,15 @@ def _call_llm(
         occupation=suspect.occupation,
         relationship=suspect.relationship_to_victim,
         personality=suspect.personality,
+        speech_style=suspect.speech_style or "natural, guarded speech",
+        emotional_tell=suspect.emotional_tell or "subtle hesitation under pressure",
+        lie_strategy=suspect.lie_strategy or "answer narrowly and avoid volunteering dangerous details",
+        private_wound=suspect.private_wound or "a private vulnerability they dislike discussing",
+        pressure_response=suspect.pressure_response or "becomes more defensive when pressed",
+        relationship_to_other_suspects=(
+            suspect.relationship_to_other_suspects
+            or "knows the other suspects through the events around the victim"
+        ),
         alibi=suspect.alibi,
         alibi_true=str(bool(suspect.alibi_true)).lower(),
         secret=suspect.secret,
@@ -154,4 +163,3 @@ def _offline_reply(suspect: Character, message: str) -> str:
         f"I want this resolved as much as you do. Ask plainly what you need, "
         f"and I'll tell you what {suspect.name.split()[0]} actually saw."
     )
-

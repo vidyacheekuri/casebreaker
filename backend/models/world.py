@@ -18,6 +18,34 @@ class Victim(BaseModel):
     cause_of_death: str
 
 
+class GenerationSources(BaseModel):
+    """Source identifiers used to construct a generated mystery."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    fbi_id: str = ""
+    persona_ids: list[str] = Field(default_factory=list)
+    literary_ids: list[str] = Field(default_factory=list)
+
+
+class CaseRecipe(BaseModel):
+    """Compact creative blueprint derived from the local story data sources."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    subgenre: str = ""
+    setting: str = ""
+    mood: str = ""
+    motive_family: str = ""
+    victim_role: str = ""
+    central_conflict: str = ""
+    killer_pressure: str = ""
+    clue_styles: list[str] = Field(default_factory=list)
+    red_herring_strategy: str = ""
+    narrative_twist: str = ""
+    forbidden_repeats: list[str] = Field(default_factory=list)
+
+
 class Character(BaseModel):
     """Playable suspect definition used by the UI and backend agents."""
 
@@ -35,6 +63,12 @@ class Character(BaseModel):
     knowledge: list[str] = Field(default_factory=list)
     is_killer: bool = False
     archetype: str = ""
+    speech_style: str = ""
+    emotional_tell: str = ""
+    lie_strategy: str = ""
+    private_wound: str = ""
+    pressure_response: str = ""
+    relationship_to_other_suspects: str = ""
     gender_presentation: str | None = None
     appearance: str = Field(
         default="",
@@ -83,4 +117,6 @@ class WorldState(BaseModel):
     characters: list[Character] = Field(default_factory=list)
     evidence: list[Evidence] = Field(default_factory=list)
     red_herrings: list[str] = Field(default_factory=list)
+    case_recipe: CaseRecipe | None = None
+    generation_sources: GenerationSources | None = None
     chroma_collection: str

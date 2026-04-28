@@ -28,6 +28,18 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 TRIPO_API_KEY = os.getenv("TRIPO_API_KEY", "")
+TRIPO_MANUAL_MODE = os.getenv("TRIPO_MANUAL_MODE", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+TRIPO_REMOTE_ENABLED = os.getenv("TRIPO_REMOTE_ENABLED", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "auto").strip().lower()
 
 CLAUDE_MODEL = "claude-haiku-4-5-20251001"
@@ -49,6 +61,8 @@ DATABASE_PATH = DATA_DIR / "casebreaker.db"
 CHROMA_PATH = DATA_DIR / "chroma"
 GUTENBERG_CACHE_DIR = DATA_DIR / "gutenberg"
 GUTENBERG_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+TRIPO_PROMPT_DIR = DATA_DIR / "tripo_prompts"
+TRIPO_PROMPT_DIR.mkdir(parents=True, exist_ok=True)
 
 WORLD_COLLECTION_PREFIX = "world_"
 LITERARY_COLLECTION_NAME = "literary_corpus"

@@ -34,8 +34,18 @@ async def init_db(connection: aiosqlite.Connection) -> None:
 async def _ensure_optional_columns(connection: aiosqlite.Connection) -> None:
     cursor = await connection.execute("PRAGMA table_info(suspects)")
     suspect_columns = {row["name"] for row in await cursor.fetchall()}
-    if "gender_presentation" not in suspect_columns:
-        await connection.execute("ALTER TABLE suspects ADD COLUMN gender_presentation TEXT")
+    optional_columns = {
+        "speech_style": "TEXT NOT NULL DEFAULT ''",
+        "emotional_tell": "TEXT NOT NULL DEFAULT ''",
+        "lie_strategy": "TEXT NOT NULL DEFAULT ''",
+        "private_wound": "TEXT NOT NULL DEFAULT ''",
+        "pressure_response": "TEXT NOT NULL DEFAULT ''",
+        "relationship_to_other_suspects": "TEXT NOT NULL DEFAULT ''",
+        "gender_presentation": "TEXT",
+    }
+    for column, definition in optional_columns.items():
+        if column not in suspect_columns:
+            await connection.execute(f"ALTER TABLE suspects ADD COLUMN {column} {definition}")
 
 
 async def replace_daily_slots(
@@ -92,9 +102,11 @@ async def replace_daily_slots(
                 INSERT INTO suspects (
                     slot_id, character_id, name, age, occupation, relationship_to_victim,
                     personality, alibi, alibi_true, secret, knowledge_json, is_killer,
-                    archetype, gender_presentation, appearance, model_path, voice_id
+                    archetype, speech_style, emotional_tell, lie_strategy, private_wound,
+                    pressure_response, relationship_to_other_suspects, gender_presentation,
+                    appearance, model_path, voice_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     world.slot_id,
@@ -110,6 +122,12 @@ async def replace_daily_slots(
                     json.dumps(character.knowledge),
                     int(character.is_killer),
                     character.archetype,
+                    character.speech_style,
+                    character.emotional_tell,
+                    character.lie_strategy,
+                    character.private_wound,
+                    character.pressure_response,
+                    character.relationship_to_other_suspects,
                     character.gender_presentation,
                     character.appearance,
                     character.model_path,
@@ -172,6 +190,8 @@ async def fetch_today_slots(
                 victim=Victim.model_validate(json.loads(row["victim_json"])),
                 suspects=world.characters,
                 evidence=world.evidence,
+                case_recipe=world.case_recipe,
+                generation_sources=world.generation_sources,
                 world_collection=row["chroma_collection"],
             )
         )
