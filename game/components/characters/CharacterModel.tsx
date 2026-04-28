@@ -270,8 +270,8 @@ function CharacterModel({
     setLipSyncMode(prepared.target.mode);
 
     const perspective = camera as THREE.PerspectiveCamera;
-    perspective.position.set(0, prepared.height * 0.55, prepared.height * 1.8);
-    perspective.lookAt(0, prepared.height * 0.54, 0);
+    perspective.position.set(0, prepared.height * 0.72, prepared.height * 1.65);
+    perspective.lookAt(0, prepared.height * 0.62, 0);
     perspective.updateProjectionMatrix();
 
     const clip =

@@ -75,15 +75,20 @@ VOICE_BANK: tuple[VoiceProfile, ...] = (
 )
 
 
-def match_voice_for_character(character: Character) -> VoiceMatchResult:
-    """Assign the best-fit voice profile for a suspect."""
+def match_voice_for_character(
+    character: Character,
+    exclude: frozenset[str] = frozenset(),
+) -> VoiceMatchResult:
+    """Assign the best-fit voice profile for a suspect, excluding already-used IDs."""
     inferred_gender = _infer_gender_hint(character)
     inferred_age_band = _infer_age_band(character.age)
     tone_tags = _infer_tone_tags(character)
 
-    best_profile = VOICE_BANK[0]
+    candidates = [p for p in VOICE_BANK if p.voice_id not in exclude] or list(VOICE_BANK)
+
+    best_profile = candidates[0]
     best_score = float("-inf")
-    for profile in VOICE_BANK:
+    for profile in candidates:
         score = 0.0
         if profile.gender_hint == inferred_gender:
             score += 2.0
@@ -111,40 +116,10 @@ def match_voice_for_character(character: Character) -> VoiceMatchResult:
 
 
 def _infer_gender_hint(character: Character) -> str:
-    female_tokens = {
-        "she",
-        "her",
-        "wife",
-        "mother",
-        "daughter",
-        "sister",
-        "ms",
-        "mrs",
-        "miss",
-        "lady",
-    }
-    male_tokens = {
-        "he",
-        "his",
-        "husband",
-        "father",
-        "son",
-        "brother",
-        "mr",
-        "sir",
-    }
-    text = " ".join(
-        [
-            character.name,
-            character.relationship_to_victim,
-            character.archetype,
-        ]
-    ).lower()
-    words = set(re.findall(r"[a-z]+", text))
-    if words & female_tokens:
-        return "female"
-    if words & male_tokens:
-        return "male"
+    if character.gender_presentation:
+        gp = character.gender_presentation.strip().lower()
+        if gp in ("female", "male"):
+            return gp
     return "unknown"
 
 

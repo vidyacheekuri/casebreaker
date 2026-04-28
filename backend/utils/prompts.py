@@ -51,7 +51,7 @@ Return this exact JSON shape (no wrapper key):
   "evidence": [
     {
       "evidence_id": "evidence_1",
-      "name": "string", "location": "string",
+      "name": "string", "location": "string (short room name only, 2-4 words max, e.g. 'Drawing Room', 'East Corridor', 'Garden Terrace' — NOT a description of where the item was found)",
       "description": "string (1-2 sentences)",
       "implicates": "suspect_1 or none",
       "is_red_herring": false
@@ -152,7 +152,7 @@ Return this exact top-level shape:
         {
           "evidence_id": "evidence_1",
           "name": "string",
-          "location": "string",
+          "location": "string (short room name only, 2-4 words max, e.g. 'Drawing Room', 'East Corridor', 'Garden Terrace' — NOT a description of where the item was found)",
           "description": "string",
           "implicates": "suspect_1",
           "is_red_herring": false

@@ -131,10 +131,12 @@ async def _hydrate_world_assets(world: WorldState) -> tuple[int, list[dict]]:
 
     playable = 0
     asset_rows: list[dict] = []
+    used_voice_ids: frozenset[str] = frozenset()
     for character, model_result in zip(world.characters, model_results):
         if model_result.model_path:
             playable += 1
-        voice_match = match_voice_for_character(character)
+        voice_match = match_voice_for_character(character, exclude=used_voice_ids)
+        used_voice_ids = used_voice_ids | {voice_match.voice_id}
         _attach_assets_to_character(character, model_result, voice_match.voice_id)
         asset_rows.append(
             {

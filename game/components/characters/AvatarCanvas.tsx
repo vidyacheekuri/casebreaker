@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { Environment, OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import CharacterModel from "./CharacterModel";
 import type {
   CharacterTimestampRange,
@@ -41,17 +41,18 @@ function normalizeModelUrl(modelPath?: string | null, modelUrl?: string | null):
 function Lights() {
   return (
     <>
-      <ambientLight intensity={0.08} color="#9fb0c8" />
-      <directionalLight position={[0.55, 1.95, 1.35]} intensity={1.55} color="#f2ece2" />
-      <pointLight position={[0, 1.38, 1.02]} intensity={1.2} color="#f5efe4" />
+      <Environment preset="studio" environmentIntensity={0.9} />
+      <ambientLight intensity={0.5} color="#c8d4e8" />
+      <directionalLight position={[0.6, 2.2, 1.8]} intensity={2.2} color="#fff8f0" castShadow />
+      <pointLight position={[-1.2, 1.8, 1.2]} intensity={1.0} color="#dde8ff" />
       <spotLight
-        position={[0.1, 2.0, 1.55]}
-        angle={0.34}
-        penumbra={0.95}
-        intensity={2.4}
-        color="#fff7ec"
-        distance={5}
-        decay={1.4}
+        position={[0.1, 2.4, 1.8]}
+        angle={0.38}
+        penumbra={0.85}
+        intensity={3.2}
+        color="#fff4e8"
+        distance={6}
+        decay={1.2}
       />
     </>
   );
@@ -76,6 +77,7 @@ export default function AvatarCanvas({
   return (
     <Canvas
       frameloop="always"
+      dpr={[1, 2]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       onCreated={({ gl }) => gl.setClearColor("#000000", 1)}
       style={{ width: "100%", height: "100%", background: "#000000" }}

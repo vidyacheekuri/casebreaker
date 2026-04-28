@@ -141,47 +141,16 @@ def _generate_remote_model(prompt: str) -> tuple[str, str]:
 
 
 def _submit_text_to_model_task(prompt: str) -> dict:
-    base_payload = {
+    payload = {
         "type": "text_to_model",
-        "model_version": "v2.5-20250123",
+        "model_version": "v3.0-20250812",
         "prompt": prompt,
         "texture": True,
         "pbr": True,
-        "quad": True,
         "face_rig": True,
         "workflow": "animation",
     }
-    payload_attempts = [
-        base_payload,
-        {key: value for key, value in base_payload.items() if key != "workflow"},
-        {
-            key: value
-            for key, value in base_payload.items()
-            if key not in {"workflow", "face_rig"}
-        },
-        {
-            key: value
-            for key, value in base_payload.items()
-            if key not in {"workflow", "face_rig", "model_version"}
-        },
-    ]
-
-    last_error: Exception | None = None
-    for payload in payload_attempts:
-        try:
-            return _tripo_request_json("POST", "/task", payload)
-        except Exception as exc:
-            message = str(exc).lower()
-            param_error = any(
-                token in message
-                for token in ("invalid", "unknown", "not allowed", "unsupported")
-            )
-            if not param_error:
-                raise
-            last_error = exc
-    if last_error is not None:
-        raise last_error
-    raise RuntimeError("Tripo submission failed unexpectedly.")
+    return _tripo_request_json("POST", "/task", payload)
 
 
 def _submit_convert_model_task(original_task_id: str) -> dict:
@@ -420,15 +389,19 @@ def _is_valid_glb(path: Path) -> bool:
         return False
 
 
+_TRIPO_STYLE_SUFFIX = (
+    " Photorealistic human, realistic proportions, detailed facial features, "
+    "high-quality textures, neutral T-pose, full body visible."
+)
+
 def _build_tripo_prompt(character: Character) -> str:
-    if character.appearance.strip():
-        return character.appearance.strip()
-    return (
+    base = character.appearance.strip() or (
         f"Realistic full-body character, {character.age}-year-old {character.occupation}. "
         f"Personality: {character.personality}. "
         f"Archetype: {character.archetype or 'mystery suspect'}. "
-        "Neutral T-pose, game-ready clean topology, detailed but practical clothing."
+        "Practical period-appropriate clothing."
     )
+    return base + _TRIPO_STYLE_SUFFIX
 
 
 def _is_image_url(value: str) -> bool:
