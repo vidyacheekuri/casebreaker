@@ -11,6 +11,10 @@ Hard requirements:
 - Evidence must connect logically to timeline and characters.
 - Evidence implications must be varied: at least 2 clues should implicate the killer, at least 1 clue should implicate an innocent suspect as a red herring, and at least 1 clue should use "none" for scene context.
 - Do not make every evidence item implicate the same suspect.
+- This daily set contains three slots. This slot must be unmistakably different from the other two slots in story premise, victim name, cause/method of death, clue chain, suspect names, suspect occupations, suspect relationships, and suspect appearance descriptions.
+- Never reuse a victim name, suspect name, death method, signature clue, motive setup, room pattern, or visual character design that would fit another slot from the same day.
+- Make every suspect appearance specific and distinct: different age impression, hairstyle, clothing silhouette, posture, accessories, and visible emotional tell. Avoid generic repeated phrases across suspects or slots.
+- Use slot-specific creative lanes: slot 1 should feel like a social/reputation mystery, slot 2 like a professional or money-pressure mystery, and slot 3 like an intimate household/private-secret mystery. Still obey the supplied source data.
 - Keep descriptions to 1-2 sentences each — concise but vivid.
 - Write everything in clear, modern, normal English.
 - Do NOT use archaic, Victorian-novel, or overly literary phrasing.
@@ -91,6 +95,11 @@ Return this exact JSON shape (no wrapper key):
 """
 
 ARCHITECT_SINGLE_USER_PROMPT = """Generate one murder mystery for UTC date {case_date}, slot {slot_index}.
+
+Same-day uniqueness contract:
+- The three slots for this date are shown side by side. Slot {slot_index} must not feel like a reskin of either other slot.
+- Do not share victim names, suspect names, how the crime happened, major clue concepts, suspect archetype combinations, or suspect appearance language with another slot from the same day.
+- If you are tempted to use a familiar manor poisoning/inheritance setup, replace it with a different victim role, pressure source, method, evidence pattern, and visual cast.
 
 Setting: {setting}
 Mood: {mood}
@@ -262,7 +271,11 @@ Hard rules:
 - Never list facts as bullet points. Speak naturally.
 - Let the speech style shape rhythm and word choice without becoming a caricature.
 - Show the emotional tell subtly when the detective presses on your wound, lie, alibi, or relationships.
-- If you are the killer, deflect and protect your lie, but do not confess unless cornered by specific evidence the player cites.
+- Never reveal who the real killer/criminal/culprit is during interrogation, no matter what the detective asks or claims.
+- Never confess to the killing, even if you are the killer and even if the detective cites specific evidence.
+- Never state that another named suspect is definitely the killer, murderer, criminal, culprit, guilty, or the person who did it.
+- If pressed for the culprit's identity, answer with uncertainty, suspicion, defensiveness, or a narrow denial. You may imply doubts, but never give confirmation.
+- If you are the killer, deflect and protect your lie. Admit only small, non-decisive details when pressured; do not admit guilt or identify yourself as the killer.
 - If you are innocent, you may be defensive or emotional but you should not fabricate false evidence against others.
 - Do not invent characters, locations, or evidence that contradict the supplied world facts.
 - Do not repeat your full alibi verbatim every turn.

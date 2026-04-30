@@ -21,12 +21,19 @@ export default function CinematicScreen() {
 
   return (
     <motion.div
-      className="flex h-full flex-col items-center justify-center gap-8 px-8"
+      className="relative flex h-full flex-col items-center justify-center gap-8 px-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8 }}
     >
+      <button
+        onClick={() => goTo("intro")}
+        className="absolute left-6 top-5 text-[10px] uppercase tracking-wider text-[#445566] transition-colors hover:text-[#C8D0DC]"
+      >
+        ← Back to Leads
+      </button>
+
       <div style={{ perspective: "900px", width: "100%", maxWidth: 620 }}>
         <motion.div
           className="w-full border border-[#3A3020] p-8"
@@ -58,7 +65,7 @@ export default function CinematicScreen() {
 
           <div className="mt-4 grid grid-cols-2 gap-2 text-[10px] text-[#667788]">
             <div>Setting: {activeSlot.setting}</div>
-            <div>Mood: {activeSlot.mood}</div>
+            <div>Tone: {activeSlot.mood}</div>
             <div>Cause of Death: {victim.cause_of_death}</div>
             <div>Occupation: {victim.occupation}</div>
           </div>
@@ -100,7 +107,7 @@ export default function CinematicScreen() {
         transition={{ delay: 1.5 }}
         whileHover={{ background: "rgba(212,168,67,.15)" }}
       >
-        Enter Investigation →
+        Enter The Scene →
       </motion.button>
     </motion.div>
   );

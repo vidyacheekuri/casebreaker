@@ -48,7 +48,7 @@ export default function EvidenceScreen() {
           onClick={() => goTo("manor")}
           className="text-[10px] uppercase tracking-wider text-[#445566] transition-colors hover:text-[#C8D0DC]"
         >
-          ← Back to Investigation
+          ← Back to Manor
         </button>
       </div>
 

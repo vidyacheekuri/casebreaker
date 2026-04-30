@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import {
   accuseSession,
   getDailySlots,
@@ -37,6 +38,8 @@ export interface InvestigationRoom {
 }
 
 const MAX_KEYWORD_SELECTION = 4;
+const PERSISTED_GAME_STATE_KEY = "casebreaker-game-state";
+const EVIDENCE_IMAGE_STORAGE_PREFIX = "casebreaker:evidence-image";
 
 function toRoomId(location: string): string {
   return location
@@ -157,6 +160,65 @@ function updateSlotEvidenceImage(
   };
 }
 
+function stripPersistedEvidenceImages(slot: DailySlotDto | null): DailySlotDto | null {
+  if (!slot) {
+    return null;
+  }
+
+  return {
+    ...slot,
+    evidence: slot.evidence.map((item) => ({
+      ...item,
+      image_url: null,
+      image_status: item.image_status === "ready" ? "idle" : item.image_status,
+    })),
+  };
+}
+
+function stripPersistedSlotImages(slots: DailySlotDto[]): DailySlotDto[] {
+  return slots
+    .map((slot) => stripPersistedEvidenceImages(slot))
+    .filter((slot): slot is DailySlotDto => Boolean(slot));
+}
+
+function pruneLargeLocalStorageEntries(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const keysToRemove: string[] = [];
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+    if (key?.startsWith(EVIDENCE_IMAGE_STORAGE_PREFIX)) {
+      keysToRemove.push(key);
+    }
+  }
+
+  for (const key of keysToRemove) {
+    window.localStorage.removeItem(key);
+  }
+}
+
+function createSafeLocalStorage() {
+  return {
+    getItem: (name: string) => window.sessionStorage.getItem(name),
+    setItem: (name: string, value: string) => {
+      try {
+        window.sessionStorage.setItem(name, value);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "QuotaExceededError") {
+          pruneLargeLocalStorageEntries();
+          window.sessionStorage.removeItem(PERSISTED_GAME_STATE_KEY);
+          window.sessionStorage.setItem(name, value);
+          return;
+        }
+        throw error;
+      }
+    },
+    removeItem: (name: string) => window.sessionStorage.removeItem(name),
+  };
+}
+
 interface GameState {
   screen: Screen;
   gameStartTime: number | null;
@@ -214,7 +276,9 @@ interface GameState {
   resetGame: () => void;
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
+export const useGameStore = create<GameState>()(
+  persist(
+    (set, get) => ({
   screen: "intro",
   gameStartTime: null,
 
@@ -508,4 +572,32 @@ export const useGameStore = create<GameState>((set, get) => ({
       hiddenSlots: state.hiddenSlots,
     }));
   },
-}));
+}),
+    {
+      name: PERSISTED_GAME_STATE_KEY,
+      storage: createJSONStorage(createSafeLocalStorage),
+      partialize: (state) => ({
+        screen: state.screen,
+        gameStartTime: state.gameStartTime,
+        dailyKeywords: state.dailyKeywords,
+        selectedKeywordIds: state.selectedKeywordIds,
+        hiddenSlots: stripPersistedSlotImages(state.hiddenSlots),
+        matchedSlotId: state.matchedSlotId,
+        sessionId: state.sessionId,
+        activeSlot: stripPersistedEvidenceImages(state.activeSlot),
+        rooms: state.rooms,
+        selectedRoomId: state.selectedRoomId,
+        selectedSuspectId: state.selectedSuspectId,
+        searchedRooms: state.searchedRooms,
+        discoveredEvidence: state.discoveredEvidence,
+        selectedEvidenceIds: state.selectedEvidenceIds,
+        reviewedEvidenceIds: state.reviewedEvidenceIds,
+        accusationEvidenceIds: state.accusationEvidenceIds,
+        suspectStress: state.suspectStress,
+        interrogationHistories: state.interrogationHistories,
+        latestInstinctQuote: state.latestInstinctQuote,
+        accusation: state.accusation,
+      }),
+    }
+  )
+);

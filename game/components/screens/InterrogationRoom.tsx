@@ -5,8 +5,7 @@ import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { interrogateSession } from "@/lib/backend-client";
 import { useGameStore } from "@/lib/store";
-import type { DetectiveInstinctDto, SuspectDto } from "@/lib/backend-types";
-import SpeakingAura from "@/components/characters/SpeakingAura";
+import type { DetectiveInstinctDto, EvidenceDto, SuspectDto } from "@/lib/backend-types";
 import EvidenceBoard from "@/components/ui/EvidenceBoard";
 import {
   approxVisemeTimelineFromText,
@@ -52,13 +51,85 @@ async function revealByWords(text: string, onChunk: (value: string) => void): Pr
   }
 }
 
-function buildSuggestedQuestions(suspect: SuspectDto): string[] {
-  return [
+function normalizeQuestion(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function wasAsked(question: string, messages: Array<{ role: string; content: string }>): boolean {
+  const normalizedQuestion = normalizeQuestion(question);
+  return messages.some(
+    (message) =>
+      message.role === "user" &&
+      (normalizeQuestion(message.content).includes(normalizedQuestion) ||
+        normalizedQuestion.includes(normalizeQuestion(message.content)))
+  );
+}
+
+function extractFollowUpPhrase(text: string): string | null {
+  const quoted = text.match(/"([^"]{8,80})"/);
+  if (quoted?.[1]) {
+    return quoted[1];
+  }
+
+  const sentences = text
+    .split(/[.!?]/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.length >= 18 && sentence.length <= 110);
+
+  return sentences[0] ?? null;
+}
+
+function buildSuggestedQuestions(
+  suspect: SuspectDto,
+  messages: Array<{ role: string; content: string; tone?: string }>,
+  selectedEvidence: EvidenceDto[],
+  contradictoryEvidence: EvidenceDto[]
+): string[] {
+  const lastSuspectMessage = [...messages].reverse().find((message) => message.role === "assistant");
+  const lastDetectiveMessage = [...messages].reverse().find((message) => message.role === "user");
+  const followUpPhrase = lastSuspectMessage ? extractFollowUpPhrase(lastSuspectMessage.content) : null;
+  const latestTone = lastSuspectMessage?.tone?.toLowerCase() ?? "";
+
+  const candidates: string[] = [];
+
+  if (contradictoryEvidence[0]) {
+    candidates.push(`How do you explain ${contradictoryEvidence[0].name}?`);
+  }
+
+  if (selectedEvidence[0]) {
+    candidates.push(`What do you know about ${selectedEvidence[0].name}?`);
+  }
+
+  if (followUpPhrase) {
+    candidates.push(`When you said "${followUpPhrase}", what exactly did you mean?`);
+  }
+
+  if (latestTone && ["evasive", "guarded", "defensive", "nervous", "hostile", "anxious"].includes(latestTone)) {
+    candidates.push("You sound careful. What are you trying not to say?");
+  }
+
+  if (lastDetectiveMessage?.content.toLowerCase().includes("alibi")) {
+    candidates.push("Who can confirm that version of your alibi?");
+    candidates.push("What detail from that time would prove you were there?");
+  }
+
+  candidates.push(
     "Where were you at the time of the death?",
     "Walk me through your alibi in detail.",
+    `What was your last private conversation with the victim?`,
+    `Why would someone think you had a reason to harm the victim?`,
     `How would you describe your relationship to the victim (${suspect.relationship_to_victim})?`,
-    `What are you leaving out about that night?`,
-  ];
+    `What are you leaving out about that night?`
+  );
+
+  return candidates
+    .filter((question, index, all) => all.indexOf(question) === index)
+    .filter((question) => !wasAsked(question, messages))
+    .slice(0, 4);
 }
 
 function SuspectLabel({ suspect, stressed }: { suspect: SuspectDto; stressed: boolean }) {
@@ -364,7 +435,12 @@ export default function InterrogationRoom() {
     }
   };
 
-  const suggestedQuestions = buildSuggestedQuestions(suspect);
+  const suggestedQuestions = buildSuggestedQuestions(
+    suspect,
+    messages,
+    selectedEvidence,
+    contradictoryEvidence
+  );
 
   return (
     <motion.div
@@ -418,7 +494,6 @@ export default function InterrogationRoom() {
             visemeTimeline={visemeTimeline}
             speechElapsedMs={speechElapsedMs}
           />
-          <SpeakingAura speaking={speaking} />
           <AnimatePresence>
             {spokenSubtitle ? (
               <motion.div

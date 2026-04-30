@@ -3,32 +3,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/lib/store";
-import type { DailyKeywordDto } from "@/lib/backend-types";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  emotion: "Mood",
-  investigation: "Investigation",
-  tension: "Pressure",
-  suspects: "Suspects",
-  atmosphere: "Atmosphere",
-  twist: "Twist",
-  pace: "Pace",
-};
-
-const CATEGORY_ORDER = ["emotion", "investigation", "tension", "suspects", "atmosphere", "twist", "pace"];
-
-function groupKeywords(keywords: DailyKeywordDto[]) {
-  const grouped = new Map<string, DailyKeywordDto[]>();
-  for (const keyword of keywords) {
-    const category = keyword.category || "story";
-    grouped.set(category, [...(grouped.get(category) ?? []), keyword]);
-  }
-  return Array.from(grouped.entries()).sort(([a], [b]) => {
-    const aIndex = CATEGORY_ORDER.indexOf(a);
-    const bIndex = CATEGORY_ORDER.indexOf(b);
-    return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
-  });
-}
 
 export default function IntroScreen() {
   const {
@@ -67,13 +41,13 @@ export default function IntroScreen() {
           CaseBreaker AI
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-[#77889A]" style={{ fontFamily: "Georgia, serif" }}>
-          Pick up to four signals. We will match your choices to today&apos;s best story and start your case.
+          Pick up to four leads. We will match your choices to today&apos;s case file.
         </p>
       </div>
 
       <div className="w-full max-w-3xl rounded-lg border border-white/10 bg-white/[0.02] p-5">
         <div className="mb-4 flex items-center justify-between">
-          <div className="text-[10px] uppercase tracking-[3px] text-[#D4A843]">Choose A Case Mood</div>
+          <div className="text-[10px] uppercase tracking-[3px] text-[#D4A843]">Choose Your Leads</div>
           <div className="text-[10px] text-[#445566]">{selectedKeywordIds.length} / 4 selected</div>
         </div>
 
@@ -84,35 +58,26 @@ export default function IntroScreen() {
             No daily keywords are available yet. Generate today&apos;s slots in the backend first.
           </div>
         ) : (
-          <div className="space-y-4">
-            {groupKeywords(dailyKeywords).map(([category, keywords]) => (
-              <div key={category}>
-                <div className="mb-2 text-[9px] uppercase tracking-[2.4px] text-[#526174]">
-                  {CATEGORY_LABELS[category] ?? category}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {keywords.map((keyword) => {
-                    const selected = selectedKeywordIds.includes(keyword.keyword_id);
-                    const atLimit = selectedKeywordIds.length >= 4 && !selected;
-                    return (
-                      <button
-                        key={keyword.keyword_id}
-                        onClick={() => toggleKeywordSelection(keyword.keyword_id)}
-                        disabled={atLimit || startingSession}
-                        className="rounded-full border px-3 py-1.5 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-45"
-                        style={{
-                          borderColor: selected ? "rgba(212,168,67,.55)" : "rgba(255,255,255,.14)",
-                          background: selected ? "rgba(212,168,67,.14)" : "rgba(255,255,255,.03)",
-                          color: selected ? "#D4A843" : "#C8D0DC",
-                        }}
-                      >
-                        {keyword.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-wrap gap-2">
+            {dailyKeywords.map((keyword) => {
+              const selected = selectedKeywordIds.includes(keyword.keyword_id);
+              const atLimit = selectedKeywordIds.length >= 4 && !selected;
+              return (
+                <button
+                  key={keyword.keyword_id}
+                  onClick={() => toggleKeywordSelection(keyword.keyword_id)}
+                  disabled={atLimit || startingSession}
+                  className="rounded-full border px-3 py-1.5 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-45"
+                  style={{
+                    borderColor: selected ? "rgba(212,168,67,.55)" : "rgba(255,255,255,.14)",
+                    background: selected ? "rgba(212,168,67,.14)" : "rgba(255,255,255,.03)",
+                    color: selected ? "#D4A843" : "#C8D0DC",
+                  }}
+                >
+                  {keyword.label}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -146,7 +111,7 @@ export default function IntroScreen() {
           whileHover={{ background: "rgba(212,168,67,.18)" }}
           whileTap={{ scale: 0.98 }}
         >
-          {startingSession ? "Matching Story..." : "Start Investigation"}
+          {startingSession ? "Preparing Case..." : "Open Case File"}
         </motion.button>
       </div>
     </motion.div>

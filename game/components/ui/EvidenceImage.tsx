@@ -4,18 +4,17 @@ import type { EvidenceDto } from "@/lib/backend-types";
 
 interface Props {
   evidence: EvidenceDto;
-  size?: "card" | "detail";
+  size?: "card" | "detail" | "compact";
 }
 
 export default function EvidenceImage({ evidence, size = "card" }: Props) {
   const imageUrl = evidence.image_url || null;
-  const large = size === "detail";
+  const sizeClass =
+    size === "detail" ? "mb-4 aspect-[4/3] w-full" : size === "compact" ? "h-16 w-16" : "h-80 w-80";
 
   return (
     <div
-      className={`relative shrink-0 overflow-hidden rounded-md border border-white/10 bg-black/20 ${
-        large ? "mb-4 aspect-[4/3] w-full" : "h-16 w-16"
-      }`}
+      className={`relative shrink-0 overflow-hidden rounded-md border border-white/10 bg-black/20 ${sizeClass}`}
     >
       {imageUrl ? (
         <img

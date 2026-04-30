@@ -19,7 +19,7 @@ from rag.world_embedder import embed_world
 from services.tripo_service import TripoModelResult, generate_character_model_asset
 from services.voice_matcher import match_voice_for_character
 from utils.config import MAX_GENERATION_RETRIES
-from utils.novelty_guard import detect_duplicate
+from utils.novelty_guard import detect_duplicate, detect_same_day_similarity
 
 
 async def generate_daily_slots(connection) -> dict:
@@ -37,17 +37,24 @@ async def generate_daily_slots(connection) -> dict:
 
     for world in await generate_daily_worlds(case_date):
         novelty = detect_duplicate(world, prior_fingerprints + list(fingerprints.values()))
-        if novelty.is_duplicate:
-            for variant_seed in range(1, MAX_GENERATION_RETRIES + 1):
+        same_day_novelty = detect_same_day_similarity(world, accepted_worlds)
+        if novelty.is_duplicate or same_day_novelty.is_too_similar:
+            for variant_seed in range(1, (MAX_GENERATION_RETRIES * 3) + 1):
                 refreshed = generate_slot_world(case_date, world.slot_index, variant_seed=variant_seed)
                 retry_novelty = detect_duplicate(
                     refreshed,
                     prior_fingerprints + list(fingerprints.values()),
                 )
-                if not retry_novelty.is_duplicate:
+                retry_same_day_novelty = detect_same_day_similarity(refreshed, accepted_worlds)
+                if not retry_novelty.is_duplicate and not retry_same_day_novelty.is_too_similar:
                     world = refreshed
                     novelty = retry_novelty
                     break
+            else:
+                reason = same_day_novelty.reason or "too similar to an existing story"
+                raise RuntimeError(
+                    f"Could not generate a distinct slot {world.slot_index}: {reason}."
+                )
         accepted_worlds.append(world)
         fingerprints[world.slot_id] = novelty.fingerprint
         embed_world(world)

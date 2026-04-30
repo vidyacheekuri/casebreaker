@@ -72,7 +72,7 @@ export default function RoomScreen() {
         onClick={() => goTo("manor")}
         className="w-fit text-[10px] uppercase tracking-wider text-[#445566] transition-colors hover:text-[#C8D0DC]"
       >
-        ← Back to Investigation
+        ← Back to Manor
       </button>
 
       <div>
@@ -200,7 +200,7 @@ export default function RoomScreen() {
             onClick={() => goTo("manor")}
             className="mt-auto text-[10px] uppercase tracking-[3px] text-[#445566] transition-colors hover:text-[#C8D0DC]"
           >
-            ← Return to Investigation
+            ← Return to Manor
           </button>
         </div>
       )}

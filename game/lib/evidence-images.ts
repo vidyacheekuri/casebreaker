@@ -3,8 +3,6 @@ import type { EvidenceDto } from "@/lib/backend-types";
 const EVIDENCE_IMAGE_STYLE =
   "single detective evidence object, centered, dark neutral background, cinematic inventory render, highly readable, no people, no hands, no clutter";
 
-const EVIDENCE_IMAGE_STORAGE_PREFIX = "casebreaker:evidence-image";
-
 export interface EvidenceImageCacheEntry {
   caseId: string;
   evidenceId: string;
@@ -27,48 +25,15 @@ export function buildEvidenceImagePrompt(evidence: EvidenceDto): string {
   ].join(", ");
 }
 
-function makeEvidenceImageCacheKey(caseId: string, evidenceId: string): string {
-  return `${EVIDENCE_IMAGE_STORAGE_PREFIX}:${caseId}:${evidenceId}`;
-}
-
 export function readEvidenceImageCache(
-  caseId: string,
-  evidenceId: string
+  _caseId: string,
+  _evidenceId: string
 ): EvidenceImageCacheEntry | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(makeEvidenceImageCacheKey(caseId, evidenceId));
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as EvidenceImageCacheEntry;
-    if (!parsed?.imageUrl || !parsed?.prompt) {
-      return null;
-    }
-
-    return parsed;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
-export function writeEvidenceImageCache(entry: EvidenceImageCacheEntry): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(
-      makeEvidenceImageCacheKey(entry.caseId, entry.evidenceId),
-      JSON.stringify(entry)
-    );
-  } catch (error) {
-    console.warn("[evidence-images] failed to persist local cache", error);
-  }
+export function writeEvidenceImageCache(_entry: EvidenceImageCacheEntry): void {
+  return;
 }
 
 export async function requestEvidenceImageGeneration(input: {

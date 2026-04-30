@@ -14,10 +14,9 @@ const responseCache = new Map<
   }
 >();
 
-function readBackendEnvValue(key: string): string | undefined {
+function readEnvFileValue(filePath: string, key: string): string | undefined {
   try {
-    const envPath = path.join(process.cwd(), "..", "backend", ".env");
-    const envText = readFileSync(envPath, "utf-8");
+    const envText = readFileSync(filePath, "utf-8");
     const line = envText
       .split(/\r?\n/)
       .find((entry) => entry.trim().startsWith(`${key}=`));
@@ -32,8 +31,27 @@ function readBackendEnvValue(key: string): string | undefined {
   }
 }
 
+function readLocalEnvValue(key: string): string | undefined {
+  const cwd = process.cwd();
+  const envPaths = [
+    path.join(cwd, ".env.local"),
+    path.join(cwd, "..", ".env"),
+    path.join(cwd, "..", ".env.local"),
+    path.join(cwd, "..", "backend", ".env"),
+  ];
+
+  for (const envPath of envPaths) {
+    const value = readEnvFileValue(envPath, key);
+    if (value) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
 function getServerEnvValue(key: string): string | undefined {
-  return process.env[key]?.trim() || readBackendEnvValue(key);
+  return process.env[key]?.trim() || readLocalEnvValue(key);
 }
 
 export async function POST(request: NextRequest) {

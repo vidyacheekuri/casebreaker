@@ -190,6 +190,7 @@ async def fetch_today_slots(
                 victim=Victim.model_validate(json.loads(row["victim_json"])),
                 suspects=world.characters,
                 evidence=world.evidence,
+                timeline=world.timeline,
                 case_recipe=world.case_recipe,
                 generation_sources=world.generation_sources,
                 world_collection=row["chroma_collection"],

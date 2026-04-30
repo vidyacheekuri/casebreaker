@@ -43,6 +43,12 @@ export interface EvidenceDto {
   image_status?: string;
 }
 
+export interface TimelineEventDto {
+  time?: string;
+  event?: string;
+  witnessed_by?: string[];
+}
+
 export interface CaseRecipeDto {
   subgenre: string;
   setting: string;
@@ -76,6 +82,7 @@ export interface DailySlotDto {
   victim: VictimDto;
   suspects: SuspectDto[];
   evidence: EvidenceDto[];
+  timeline?: TimelineEventDto[];
   case_recipe?: CaseRecipeDto | null;
   generation_sources?: GenerationSourcesDto | null;
   world_collection: string;

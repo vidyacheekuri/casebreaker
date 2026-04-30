@@ -12,6 +12,7 @@ import {
 export default function EvidenceImageBootstrapper() {
   const { screen, activeSlot, updateEvidenceImage } = useGameStore();
   const inFlightRef = useRef<Set<string>>(new Set());
+  const attemptedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (screen === "intro" || !activeSlot) {
@@ -34,19 +35,20 @@ export default function EvidenceImageBootstrapper() {
         continue;
       }
 
-      if (
-        item.image_status === "ready" ||
-        item.image_status === "generating" ||
-        item.image_status === "failed"
-      ) {
+      if (item.image_status === "ready" && item.image_url) {
         continue;
       }
 
-      if (inFlightRef.current.has(cacheKey)) {
+      if (item.image_status === "generating") {
+        continue;
+      }
+
+      if (inFlightRef.current.has(cacheKey) || attemptedRef.current.has(cacheKey)) {
         continue;
       }
 
       inFlightRef.current.add(cacheKey);
+      attemptedRef.current.add(cacheKey);
       console.log("[evidence-images] generating", {
         caseId: activeSlot.slot_id,
         evidenceId: item.evidence_id,

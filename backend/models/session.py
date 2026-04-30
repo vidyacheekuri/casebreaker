@@ -59,6 +59,7 @@ class DailySlot(BaseModel):
     victim: Victim
     suspects: list[Character]
     evidence: list[Evidence]
+    timeline: list[dict] = Field(default_factory=list)
     case_recipe: CaseRecipe | None = None
     generation_sources: GenerationSources | None = None
     world_collection: str

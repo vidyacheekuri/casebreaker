@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/lib/store";
+import EvidenceImage from "@/components/ui/EvidenceImage";
 
 export default function AccusationScreen() {
-  const { activeSlot, discoveredEvidence, goTo, submitAccusation } = useGameStore();
+  const { activeSlot, discoveredEvidence, goTo, submitAccusation, suspectStress } = useGameStore();
 
   const [accusedId, setAccusedId] = useState<string | null>(null);
   const [reasoning, setReasoning] = useState("");
@@ -40,7 +41,7 @@ export default function AccusationScreen() {
     setSubmitting(true);
     setError(null);
     try {
-      await submitAccusation(accusedId, reasoning.trim());
+      await submitAccusation(accusedId, reasoning.trim() || "No written reasoning provided.");
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "Could not submit accusation.";
       setError(message);
@@ -77,19 +78,27 @@ export default function AccusationScreen() {
         {discoveredItems.length === 0 ? (
           <div className="text-xs italic text-[#334455]">No evidence collected yet.</div>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {discoveredItems.map((item) => (
-              <span
+              <div
                 key={item.evidence_id}
-                className="rounded px-2 py-0.5 text-[10px]"
+                className="flex items-center gap-3 rounded border p-2"
                 style={{
                   background: "rgba(212,168,67,.08)",
                   border: "1px solid rgba(212,168,67,.2)",
                   color: "#D4A843",
                 }}
               >
-                {item.name}
-              </span>
+                <EvidenceImage evidence={item} size="compact" />
+                <div className="min-w-0">
+                  <div className="truncate text-[10px] font-semibold text-[#D4A843]">
+                    {item.name}
+                  </div>
+                  <div className="mt-0.5 truncate text-[9px] text-[#667788]">
+                    {item.location}
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -100,6 +109,7 @@ export default function AccusationScreen() {
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {activeSlot.suspects.map((suspect) => {
             const selected = accusedId === suspect.character_id;
+            const stress = suspectStress[suspect.character_id] ?? 0;
             return (
               <motion.button
                 key={suspect.character_id}
@@ -114,6 +124,21 @@ export default function AccusationScreen() {
                 <div className="text-xs font-semibold text-[#C8D0DC]">{suspect.name}</div>
                 <div className="mt-0.5 text-[9px] text-[#445566]">{suspect.occupation}</div>
                 <div className="mt-1 text-[9px] italic text-[#334455]">{suspect.relationship_to_victim}</div>
+                <div className="mt-3">
+                  <div className="mb-1 flex items-center justify-between text-[8px] uppercase tracking-[1.6px] text-[#334455]">
+                    <span>Stress</span>
+                    <span>{Math.round(stress)}%</span>
+                  </div>
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-white/5">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${stress}%`,
+                        background: stress >= 70 ? "#f44336" : stress >= 40 ? "#FF9800" : "#4CAF50",
+                      }}
+                    />
+                  </div>
+                </div>
               </motion.button>
             );
           })}
@@ -143,7 +168,7 @@ export default function AccusationScreen() {
 
       <motion.button
         onClick={() => setConfirming(true)}
-        disabled={!accusedId || !reasoning.trim() || submitting}
+        disabled={!accusedId || submitting}
         className="py-4 text-sm font-semibold uppercase tracking-[3px] transition-all disabled:opacity-35"
         style={{
           background: "rgba(212,168,67,.1)",

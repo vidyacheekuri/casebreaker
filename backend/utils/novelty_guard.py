@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 
 from models.world import WorldState
@@ -16,6 +17,14 @@ class FingerprintResult:
     fingerprint: dict
     is_duplicate: bool
     closest_distance: float | None
+
+
+@dataclass(slots=True)
+class SameDayNoveltyResult:
+    """Result of comparing one generated slot against already accepted same-day slots."""
+
+    is_too_similar: bool
+    reason: str | None = None
 
 
 def build_story_fingerprint(world: WorldState) -> dict:
@@ -97,3 +106,106 @@ def detect_duplicate(world: WorldState, prior_fingerprints: list[dict]) -> Finge
         is_duplicate=is_duplicate,
         closest_distance=closest_distance,
     )
+
+
+def detect_same_day_similarity(world: WorldState, accepted_worlds: list[WorldState]) -> SameDayNoveltyResult:
+    """Reject slots that overlap too much with other slots from the same daily batch."""
+    victim_name = _normalized_name(world.victim.name)
+    suspect_names = {_normalized_name(character.name) for character in world.characters}
+    story_text = _story_text(world)
+    crime_text = _crime_text(world)
+    appearance_texts = [_token_set(character.appearance) for character in world.characters]
+
+    for previous in accepted_worlds:
+        if victim_name and victim_name == _normalized_name(previous.victim.name):
+            return SameDayNoveltyResult(True, "victim name repeated")
+
+        previous_suspect_names = {_normalized_name(character.name) for character in previous.characters}
+        if suspect_names & previous_suspect_names:
+            return SameDayNoveltyResult(True, "suspect name repeated")
+
+        previous_story_text = _story_text(previous)
+        if _jaccard(_token_set(story_text), _token_set(previous_story_text)) >= 0.22:
+            return SameDayNoveltyResult(True, "story premise too similar")
+
+        previous_crime_text = _crime_text(previous)
+        if _jaccard(_token_set(crime_text), _token_set(previous_crime_text)) >= 0.24:
+            return SameDayNoveltyResult(True, "crime method or clue chain too similar")
+
+        previous_appearance_texts = [_token_set(character.appearance) for character in previous.characters]
+        for appearance_tokens in appearance_texts:
+            for previous_tokens in previous_appearance_texts:
+                if _jaccard(appearance_tokens, previous_tokens) >= 0.34:
+                    return SameDayNoveltyResult(True, "suspect appearance too similar")
+
+    return SameDayNoveltyResult(False)
+
+
+def _story_text(world: WorldState) -> str:
+    recipe = world.case_recipe
+    return " ".join(
+        [
+            world.title,
+            world.summary,
+            world.setting,
+            world.motive,
+            recipe.subgenre if recipe else "",
+            recipe.central_conflict if recipe else "",
+            recipe.motive_family if recipe else "",
+            recipe.red_herring_strategy if recipe else "",
+            recipe.narrative_twist if recipe else "",
+        ]
+    )
+
+
+def _crime_text(world: WorldState) -> str:
+    return " ".join(
+        [
+            world.victim.cause_of_death,
+            " ".join(str(event.get("event", "")) for event in world.timeline),
+            " ".join(evidence.name for evidence in world.evidence),
+            " ".join(evidence.description for evidence in world.evidence),
+        ]
+    )
+
+
+def _normalized_name(name: str) -> str:
+    return " ".join(name.lower().split())
+
+
+def _token_set(text: str) -> set[str]:
+    stopwords = {
+        "the",
+        "and",
+        "with",
+        "from",
+        "that",
+        "this",
+        "into",
+        "their",
+        "they",
+        "them",
+        "was",
+        "were",
+        "for",
+        "but",
+        "not",
+        "after",
+        "before",
+        "through",
+        "about",
+        "person",
+        "suspect",
+        "victim",
+    }
+    return {
+        token
+        for token in re.findall(r"[a-z0-9]{4,}", text.lower())
+        if token not in stopwords
+    }
+
+
+def _jaccard(left: set[str], right: set[str]) -> float:
+    if not left or not right:
+        return 0.0
+    return len(left & right) / len(left | right)
