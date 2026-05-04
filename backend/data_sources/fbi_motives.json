@@ -58,5 +58,65 @@
     "settings": ["walled garden", "greenhouse", "guest wing", "servants' corridor"],
     "clue_styles": ["tool out of place", "boot prints", "servants' rota", "mislaid medicine tray"],
     "emotional_tones": ["quiet fury", "wounded loyalty", "class resentment"]
+  },
+  {
+    "id": "revenge_vendetta",
+    "motive_family": "revenge vendetta",
+    "relationship_patterns": ["old rival and victim", "wronged party and perpetrator", "family avenger and offender"],
+    "suspect_pressures": ["decade-old grudge resurfaces", "historical wrong demanding settlement", "blood debt unpaid"],
+    "victim_roles": ["merchant with a past", "retired military officer", "former administrator", "wealthy industrialist"],
+    "settings": ["railway station hotel", "costume ball venue", "hunting lodge", "collector's gallery"],
+    "clue_styles": ["dated correspondence", "antique memento", "ceremonial object", "historical document"],
+    "emotional_tones": ["simmering resentment", "calculated coldness", "righteous fury"]
+  },
+  {
+    "id": "secret_identity",
+    "motive_family": "secret identity",
+    "relationship_patterns": ["assumed persona and discoverer", "false history and witness", "reinvented life and exposer"],
+    "suspect_pressures": ["past identity about to be revealed", "false life crumbling", "fear of deportation or arrest"],
+    "victim_roles": ["mysterious visitor", "newcomer with fortune", "widow with secrets", "society newcomer"],
+    "settings": ["rented townhouse", "temporary residence", "new household", "guest accommodation"],
+    "clue_styles": ["forged document", "conflicting timeline", "unmatched handwriting", "hidden photograph"],
+    "emotional_tones": ["desperate concealment", "barely contained panic", "false civility"]
+  },
+  {
+    "id": "stolen_artifact",
+    "motive_family": "stolen artifact",
+    "relationship_patterns": ["smuggler and insurer", "thief and fence", "collector and betrayer"],
+    "suspect_pressures": ["artifact's location threatened", "theft about to be exposed", "double-cross brewing"],
+    "victim_roles": ["insurance inspector", "rival collector", "fence operative", "customs official"],
+    "settings": ["museum after hours", "private collection vault", "dockside warehouse", "dealer's study"],
+    "clue_styles": ["smuggling manifest", "appraisal note", "shipping crate mark", "collector's inventory"],
+    "emotional_tones": ["protective obsession", "greed-driven desperation", "calculated theft logic"]
+  },
+  {
+    "id": "forbidden_knowledge",
+    "motive_family": "forbidden knowledge",
+    "relationship_patterns": ["scientist and colleague", "researcher and rival", "theorist and skeptic"],
+    "suspect_pressures": ["discovery too dangerous to share", "competing researchers threatening publication", "ethical exposure imminent"],
+    "victim_roles": ["medical doctor", "naturalist", "chemist", "antiquarian scholar"],
+    "settings": ["laboratory", "study lined with books", "medical office", "scholarly sanctuary"],
+    "clue_styles": ["experimental notes", "suppressed paper", "laboratory equipment", "coded research log"],
+    "emotional_tones": ["intellectual obsession", "protective fervor", "academic paranoia"]
+  },
+  {
+    "id": "cult_loyalty",
+    "motive_family": "cult loyalty",
+    "relationship_patterns": ["initiate and apostate", "devoted member and doubter", "leader and competitor"],
+    "suspect_pressures": ["betrayal of oath threatened", "member's defection exposed", "rival claimant to leadership"],
+    "victim_roles": ["society leader", "former member", "outsider threat", "spiritual guide"],
+    "settings": ["private club study", "mansion initiation chamber", "locked meeting room", "sealed parlor"],
+    "clue_styles": ["ritual object", "cryptic inscription", "loyalty token", "ceremonial remnant"],
+    "emotional_tones": ["zealous devotion", "righteous judgment", "secretive intensity"]
+  },
+  {
+    "id": "past_crime_exposure",
+    "motive_family": "past crime exposure",
+    "relationship_patterns": ["old accomplice and witness", "former criminal and accuser", "co-conspirator and betrayer"],
+    "suspect_pressures": ["old crime about to be exposed", "accomplice threatening confession", "blackmailer demanding silence"],
+    "victim_roles": ["investigator", "journalist with leads", "witness with memory", "former associate"],
+    "settings": ["newspaper office", "solicitor's chambers", "confessional setting", "secret meeting place"],
+    "clue_styles": ["old case file", "written confession draft", "blackmail demand", "forgotten evidence"],
+    "emotional_tones": ["desperate self-preservation", "bitter recrimination", "terrified vigilance"]
   }
 ]

@@ -69,6 +69,7 @@ interface Props {
   url: string;
   speaking: boolean;
   stressed?: boolean;
+  stress?: number;
   characterTimestamps?: CharacterTimestampRange[] | null;
   visemeTimeline?: VisemeTimeline | null;
   speechElapsedMs?: number;
@@ -241,6 +242,7 @@ function CharacterModel({
   url,
   speaking,
   stressed = false,
+  stress = 0,
   characterTimestamps,
   visemeTimeline,
   speechElapsedMs = 0,
@@ -307,6 +309,9 @@ function CharacterModel({
     prepared.scene.rotation.set(0, FRONT_FACING_YAW, 0);
 
     const t = clock.getElapsedTime();
+    const effectiveStress = stressed ? Math.max(stress, 40) : stress;
+    const stressRatio = THREE.MathUtils.clamp(effectiveStress / 100, 0, 1);
+    const fidget = stressRatio >= 0.3 ? stressRatio : 0;
     const mouthTarget = speaking
       ? getMouthInfluence(characterTimestamps, visemeTimeline, speechElapsedMs)
       : 0;
@@ -335,25 +340,38 @@ function CharacterModel({
     if (speaking && target.headBone) {
       target.headBone.rotation.x = THREE.MathUtils.lerp(
         target.headBone.rotation.x,
-        THREE.MathUtils.clamp(headRestX.current + Math.sin(t * 10) * 0.02 * Math.max(0.3, mouthTarget), headRestX.current - 0.02, headRestX.current + 0.04),
+        THREE.MathUtils.clamp(
+          headRestX.current + Math.sin(t * (10 + stressRatio * 6)) * (0.02 + stressRatio * 0.018) * Math.max(0.3, mouthTarget),
+          headRestX.current - 0.025 - stressRatio * 0.02,
+          headRestX.current + 0.04 + stressRatio * 0.02
+        ),
         0.24
       );
       target.headBone.rotation.y = THREE.MathUtils.lerp(
         target.headBone.rotation.y,
-        THREE.MathUtils.clamp(headRestY.current + Math.sin(t * 5.2) * 0.012, headRestY.current - 0.015, headRestY.current + 0.015),
+        THREE.MathUtils.clamp(
+          headRestY.current + Math.sin(t * (5.2 + stressRatio * 4)) * (0.012 + stressRatio * 0.025),
+          headRestY.current - 0.015 - stressRatio * 0.03,
+          headRestY.current + 0.015 + stressRatio * 0.03
+        ),
         0.2
       );
     } else if (target.headBone) {
-      target.headBone.rotation.x = THREE.MathUtils.lerp(target.headBone.rotation.x, headRestX.current, 0.16);
-      target.headBone.rotation.y = THREE.MathUtils.lerp(target.headBone.rotation.y, headRestY.current, 0.16);
+      const lookAway = stressRatio >= 0.6 ? Math.sin(t * 0.55) * 0.1 * stressRatio : 0;
+      const fidgetX = Math.sin(t * (1.2 + stressRatio * 4.5)) * 0.018 * fidget;
+      const fidgetY = Math.sin(t * (0.9 + stressRatio * 5.5)) * 0.045 * fidget + lookAway;
+      target.headBone.rotation.x = THREE.MathUtils.lerp(target.headBone.rotation.x, headRestX.current + fidgetX, 0.12);
+      target.headBone.rotation.y = THREE.MathUtils.lerp(target.headBone.rotation.y, headRestY.current + fidgetY, 0.1);
     }
 
-    if (stressed && !speaking && target.headBone) {
-      target.headBone.rotation.y = THREE.MathUtils.lerp(
-        target.headBone.rotation.y,
-        headRestY.current + Math.sin(t * 1.4) * 0.01,
-        0.04
-      );
+    if (stressRatio > 0) {
+      const tremble = stressRatio >= 0.6 ? Math.sin(t * 32) * 0.006 * stressRatio : 0;
+      const breathing = Math.sin(t * (1.4 + stressRatio * 1.2)) * (0.006 + stressRatio * 0.008);
+      group.rotation.z = tremble;
+      group.position.y = prepared.yOffset + breathing;
+      if (stressRatio >= 0.9) {
+        prepared.scene.rotation.z = Math.sin(t * 42) * 0.004 * stressRatio;
+      }
     }
   });
 
@@ -362,7 +380,7 @@ function CharacterModel({
       <primitive object={prepared.scene} />
       {speaking && lipSyncMode === "none" ? (
         <Html position={[0, prepared.height + 0.12, 0]} center>
-          <div className="flex items-center gap-1 rounded-full border border-[#D4A843]/35 bg-[#070E1A]/80 px-2 py-1 text-[9px] uppercase tracking-[0.14em] text-[#D4A843] shadow-[0_0_14px_rgba(212,168,67,.15)]">
+          <div className="flex items-center gap-1 rounded-full border border-[#D4A843]/35 bg-[#070E1A]/80 px-2 py-1 text-detail uppercase tracking-[0.14em] text-[#D4A843] shadow-[0_0_14px_rgba(212,168,67,.15)]">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D4A843]" />
             Speaking
           </div>

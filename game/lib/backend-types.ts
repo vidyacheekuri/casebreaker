@@ -3,6 +3,7 @@ export interface VictimDto {
   age: number;
   occupation: string;
   cause_of_death: string;
+  time_of_death?: string;
 }
 
 export interface SuspectDto {
@@ -11,6 +12,7 @@ export interface SuspectDto {
   age: number;
   occupation: string;
   relationship_to_victim: string;
+  motive?: string;
   personality: string;
   alibi: string;
   alibi_true: boolean;
@@ -41,12 +43,22 @@ export interface EvidenceDto {
   image_url?: string | null;
   image_prompt?: string | null;
   image_status?: string;
+  /** Image pipeline version when ready (e.g. "2.0"). */
+  image_version?: string | null;
 }
 
 export interface TimelineEventDto {
   time?: string;
   event?: string;
   witnessed_by?: string[];
+}
+
+export interface InvestigationRoomDto {
+  room_id: string;
+  name: string;
+  description: string;
+  evidence_ids: string[];
+  clue_count: number;
 }
 
 export interface CaseRecipeDto {
@@ -79,9 +91,14 @@ export interface DailySlotDto {
   summary: string;
   mood: string;
   setting: string;
+  backstory: string;
+  crime_scene_detail: string;
+  stakes: string;
+  timeline_context: string;
   victim: VictimDto;
   suspects: SuspectDto[];
   evidence: EvidenceDto[];
+  rooms?: InvestigationRoomDto[];
   timeline?: TimelineEventDto[];
   case_recipe?: CaseRecipeDto | null;
   generation_sources?: GenerationSourcesDto | null;

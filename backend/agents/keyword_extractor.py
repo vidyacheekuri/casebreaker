@@ -302,6 +302,10 @@ def _world_text(world: WorldState) -> str:
         [
             world.title,
             world.summary,
+            world.backstory,
+            world.crime_scene_detail,
+            world.stakes,
+            world.timeline_context,
             world.mood,
             world.setting,
             world.motive,

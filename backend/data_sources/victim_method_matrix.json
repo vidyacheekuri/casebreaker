@@ -1,0 +1,345 @@
+[
+  {
+    "victim_id": "respected_patriarch",
+    "method_compatibility": [
+      {
+        "method_id": "poisoned_drink",
+        "compatibility": "high",
+        "narrative_fit": "Private evening drink, ritual habit, servant brings it",
+        "vulnerability": "Trusts household staff, predictable evening routine, drinks alone in study",
+        "evidence_pattern": ["glass with residue in study", "servant testimony about drink preparation", "unopened bottle of poison", "victim's final words about taste"],
+        "difficulty_score": 6,
+        "believability": "high",
+        "suspect_capability": "Any suspect with kitchen/study access can execute this",
+        "detective_insight": "Old patriarch's trust in routines becomes fatal"
+      },
+      {
+        "method_id": "poisoned_food",
+        "compatibility": "medium",
+        "narrative_fit": "Family meal or special dish, but patriarch watches food carefully",
+        "vulnerability": "Vanity about health status, specific food preferences",
+        "evidence_pattern": ["partial food remnants", "kitchen staff testimony", "missing poison source"],
+        "difficulty_score": 7,
+        "believability": "medium",
+        "suspect_capability": "Requires kitchen access and knowledge of patriarch's food habits",
+        "detective_insight": "Patriarch's pickiness makes poisoning less reliable"
+      },
+      {
+        "method_id": "blunt_force",
+        "compatibility": "low",
+        "narrative_fit": "Patriarch would fight back, struggle evident",
+        "vulnerability": "Pride makes him confront threats directly, physical decline hidden",
+        "evidence_pattern": ["evidence of struggle", "patriarch's defensive wounds", "object out of place"],
+        "difficulty_score": 5,
+        "believability": "low",
+        "suspect_capability": "Requires physical strength or element of surprise",
+        "detective_insight": "Patriarch's pride would make him confront killer directly"
+      },
+      {
+        "method_id": "staged_accident",
+        "compatibility": "high",
+        "narrative_fit": "Fall down stairs, collapse from 'heart', accident in study",
+        "vulnerability": "Age and health decline, known to move slowly at night",
+        "evidence_pattern": ["inconsistent injury placement", "witness saw him heading toward danger", "previous near-falls"],
+        "difficulty_score": 7,
+        "believability": "high",
+        "suspect_capability": "Any suspect who knows his movement patterns",
+        "detective_insight": "Detective initially assumes age-related accident"
+      }
+    ]
+  },
+  {
+    "victim_id": "ambitious_new_money",
+    "method_compatibility": [
+      {
+        "method_id": "poisoned_drink",
+        "compatibility": "medium",
+        "narrative_fit": "At business social event or celebrating new acquisition",
+        "vulnerability": "Overconfident, rarely checks drinks, trusts business associates",
+        "evidence_pattern": ["champagne glass at celebration", "witness saw who poured", "expensive poison"],
+        "difficulty_score": 7,
+        "believability": "medium",
+        "suspect_capability": "Requires access during social gathering",
+        "detective_insight": "Victim's social climbing created enemies in both classes"
+      },
+      {
+        "method_id": "motor_accident",
+        "compatibility": "high",
+        "narrative_fit": "Victim proud of new motorcar, drives recklessly",
+        "vulnerability": "Arrogance about driving skill, loves to show off vehicle",
+        "evidence_pattern": ["brake tampered", "tire evidence", "witness to argument before drive"],
+        "difficulty_score": 8,
+        "believability": "high",
+        "suspect_capability": "Requires mechanical knowledge or professional help",
+        "detective_insight": "New money always dies in shiny new toys"
+      },
+      {
+        "method_id": "poisoned_food",
+        "compatibility": "medium",
+        "narrative_fit": "At restaurant or club, showing off expensive taste",
+        "vulnerability": "Food snobbery, always samples new restaurants",
+        "evidence_pattern": ["restaurant staff testimony", "menu item tracking", "poison in wine"],
+        "difficulty_score": 6,
+        "believability": "medium",
+        "suspect_capability": "Requires knowledge of victim's dining plans",
+        "detective_insight": "Victim's need to display wealth leads to predictable habits"
+      },
+      {
+        "method_id": "electrocution",
+        "compatibility": "high",
+        "narrative_fit": "Tampering with new electric appliance victim is proud of",
+        "vulnerability": "Fascination with modern technology, overconfidence in safety",
+        "evidence_pattern": ["tampered appliance", "electrical burn pattern", "mechanic testimony"],
+        "difficulty_score": 7,
+        "believability": "high",
+        "suspect_capability": "Requires electrical knowledge",
+        "detective_insight": "Victim's pride in modern acquisition is the murder weapon"
+      }
+    ]
+  },
+  {
+    "victim_id": "lonely_widow",
+    "method_compatibility": [
+      {
+        "method_id": "poisoned_drink",
+        "compatibility": "high",
+        "narrative_fit": "Evening cordial, tea with visitor, nightcap before bed",
+        "vulnerability": "Lonely, trusts visitors too easily, enjoys hospitality",
+        "evidence_pattern": ["teacup with residue", "visitor records", "nighttime medicine bottles"],
+        "difficulty_score": 5,
+        "believability": "high",
+        "suspect_capability": "Any visitor or household member can execute this",
+        "detective_insight": "Widow's loneliness made her dangerously trusting"
+      },
+      {
+        "method_id": "suffocation",
+        "compatibility": "high",
+        "narrative_fit": "While sleeping, pillow over face, quick and quiet",
+        "vulnerability": "Sleeps deeply, lives alone or with loyal servants only",
+        "evidence_pattern": ["pillow fiber evidence", "no defensive marks", "servant saw nothing"],
+        "difficulty_score": 6,
+        "believability": "high",
+        "suspect_capability": "Requires nighttime access to bedroom",
+        "detective_insight": "Widow's solitude made her vulnerable at night"
+      },
+      {
+        "method_id": "contaminated_food",
+        "compatibility": "medium",
+        "narrative_fit": "Special meal prepared by servant or visiting relative",
+        "vulnerability": "Trusts household staff completely, enjoys special treats",
+        "evidence_pattern": ["food preparation records", "servant testimony", "kitchen access logs"],
+        "difficulty_score": 6,
+        "believability": "medium",
+        "suspect_capability": "Requires kitchen or meal service access",
+        "detective_insight": "Widow's trust in servants becomes her downfall"
+      },
+      {
+        "method_id": "exposure",
+        "compatibility": "medium",
+        "narrative_fit": "Locked outside during cold night or locked in cold room",
+        "vulnerability": "Frail, health already compromised, trusts to be let in",
+        "evidence_pattern": ["locked door evidence", "victim's clothing unsuitable", "weather records"],
+        "difficulty_score": 5,
+        "believability": "medium",
+        "suspect_capability": "Requires control of widow's access to shelter",
+        "detective_insight": "Someone widow trusted enough to let lock the door"
+      }
+    ]
+  },
+  {
+    "victim_id": "tyrannical_professional",
+    "method_compatibility": [
+      {
+        "method_id": "poisoned_drink",
+        "compatibility": "medium",
+        "narrative_fit": "Drink in locked office, shared during private meeting",
+        "vulnerability": "Defensive but doesn't suspect poison, drinks during tense conversations",
+        "evidence_pattern": ["office drink glass", "visitor sign-in records", "typed threat notes"],
+        "difficulty_score": 8,
+        "believability": "medium",
+        "suspect_capability": "Requires private office access and charm to visit",
+        "detective_insight": "Victim's need to control meetings creates opportunity"
+      },
+      {
+        "method_id": "blunt_force",
+        "compatibility": "high",
+        "narrative_fit": "Caught off-guard in office after hours, office items as weapon",
+        "vulnerability": "Confrontational nature, will engage in struggle",
+        "evidence_pattern": ["struggle evidence", "weapon in office", "blood spatter", "witness heard argument"],
+        "difficulty_score": 6,
+        "believability": "high",
+        "suspect_capability": "Requires physical strength and emotional control to attack",
+        "detective_insight": "Victim's domineering nature triggered violent response"
+      },
+      {
+        "method_id": "suffocation",
+        "compatibility": "low",
+        "narrative_fit": "Would require overpowering a conscious, fighting victim",
+        "vulnerability": "Alert and defensive, unlikely to be caught off-guard",
+        "evidence_pattern": ["severe struggle marks", "killer's injuries", "defensive wounds"],
+        "difficulty_score": 4,
+        "believability": "low",
+        "suspect_capability": "Requires physical overpowering of strong opponent",
+        "detective_insight": "Victim too alert and defensive for quiet methods"
+      },
+      {
+        "method_id": "poisoned_food",
+        "compatibility": "high",
+        "narrative_fit": "Lunch brought by assistant or shared office meal",
+        "vulnerability": "Eats while working, doesn't pay attention to food",
+        "evidence_pattern": ["meal delivery records", "assistant testimony", "food remnants", "poison source"],
+        "difficulty_score": 7,
+        "believability": "high",
+        "suspect_capability": "Requires office access and knowledge of victim's eating habits",
+        "detective_insight": "Victim's workaholic nature makes them distracted from food"
+      }
+    ]
+  },
+  {
+    "victim_id": "charismatic_charlatan",
+    "method_compatibility": [
+      {
+        "method_id": "poisoned_drink",
+        "compatibility": "low",
+        "narrative_fit": "Charlatan notices tampering, always suspicious",
+        "vulnerability": "Paranoid about betrayal, but drinks while performing",
+        "evidence_pattern": ["drink at social event", "sleight of hand by killer"],
+        "difficulty_score": 9,
+        "believability": "low",
+        "suspect_capability": "Requires expert sleight of hand and timing",
+        "detective_insight": "Victim's suspicious nature makes simple poisoning nearly impossible"
+      },
+      {
+        "method_id": "shooting",
+        "compatibility": "high",
+        "narrative_fit": "Shot by someone they defrauded, quick and violent",
+        "vulnerability": "Made dangerous enemies, victim of their own con",
+        "evidence_pattern": ["bullet evidence", "firearm", "victim's marks/cons list"],
+        "difficulty_score": 5,
+        "believability": "high",
+        "suspect_capability": "Requires access to firearm",
+        "detective_insight": "Many people wanted the charlatan dead"
+      },
+      {
+        "method_id": "blunt_force",
+        "compatibility": "medium",
+        "narrative_fit": "Caught during con, struggle over hidden goods",
+        "vulnerability": "Overconfident in charm and persuasion",
+        "evidence_pattern": ["struggle evidence", "hidden goods location", "victim's con materials"],
+        "difficulty_score": 6,
+        "believability": "medium",
+        "suspect_capability": "Requires someone charming enough to get close",
+        "detective_insight": "Charlatan's own con materials become evidence"
+      },
+      {
+        "method_id": "overdose",
+        "compatibility": "high",
+        "narrative_fit": "Charlatan uses drugs, given bad batch or poisoned dose",
+        "vulnerability": "Substance user, trusts suppliers and fellow users",
+        "evidence_pattern": ["drug paraphernalia", "poison in drug", "supplier testimony"],
+        "difficulty_score": 7,
+        "believability": "high",
+        "suspect_capability": "Requires knowledge of victim's drug habits",
+        "detective_insight": "Charlatan's hidden vice becomes their downfall"
+      }
+    ]
+  },
+  {
+    "victim_id": "frail_elder",
+    "method_compatibility": [
+      {
+        "method_id": "poisoned_drink",
+        "compatibility": "high",
+        "narrative_fit": "Nightly medicine, tea, or brandy, victim trusts caretaker",
+        "vulnerability": "Dependent on caregivers, trusts household completely",
+        "evidence_pattern": ["medicine bottle", "drink container", "caretaker testimony"],
+        "difficulty_score": 4,
+        "believability": "high",
+        "suspect_capability": "Requires caretaker or household access",
+        "detective_insight": "Elder's dependency on caregivers is the vulnerability"
+      },
+      {
+        "method_id": "suffocation",
+        "compatibility": "high",
+        "narrative_fit": "While sleeping or ill, pillow over face, quick",
+        "vulnerability": "Weak, cannot fight back, sleeps deeply",
+        "evidence_pattern": ["fiber evidence", "no defensive marks", "caretaker access"],
+        "difficulty_score": 4,
+        "believability": "high",
+        "suspect_capability": "Anyone with bedside access can do this",
+        "detective_insight": "Elder's physical weakness makes them helpless"
+      },
+      {
+        "method_id": "exposure",
+        "compatibility": "high",
+        "narrative_fit": "Left in cold room, outside, or without shelter/medicine",
+        "vulnerability": "Health already compromised, cannot survive without care",
+        "evidence_pattern": ["location of body", "victim's clothing unsuitable", "caretaker negligence"],
+        "difficulty_score": 3,
+        "believability": "high",
+        "suspect_capability": "Requires neglect only, not active murder",
+        "detective_insight": "Line between murder and negligence is blurred"
+      },
+      {
+        "method_id": "staged_accident",
+        "compatibility": "high",
+        "narrative_fit": "Fall that matches elder's known frailty",
+        "vulnerability": "Known to be unsteady, previous falls expected",
+        "evidence_pattern": ["fall location matches pattern", "no unexpected evidence"],
+        "difficulty_score": 5,
+        "believability": "very high",
+        "suspect_capability": "Almost any cause of death appears accidental",
+        "detective_insight": "Detective must prove it wasn't natural causes"
+      }
+    ]
+  },
+  {
+    "victim_id": "idealistic_reformer",
+    "method_compatibility": [
+      {
+        "method_id": "poisoned_drink",
+        "compatibility": "low",
+        "narrative_fit": "Reformer checks everything, paranoid about enemies",
+        "vulnerability": "Trusts few people, but drinks at public events while speaking",
+        "evidence_pattern": ["event location", "witness to drink poisoning"],
+        "difficulty_score": 8,
+        "believability": "low",
+        "suspect_capability": "Requires public event access and timing",
+        "detective_insight": "Reformer's vigilance makes simple poisoning difficult"
+      },
+      {
+        "method_id": "shooting",
+        "compatibility": "high",
+        "narrative_fit": "Assassinated by those threatened by investigation",
+        "vulnerability": "Publicly known, predictable schedule, makes enemies",
+        "evidence_pattern": ["firearm", "witness testimony", "suspect list from victims"],
+        "difficulty_score": 5,
+        "believability": "high",
+        "suspect_capability": "Requires access to firearm",
+        "detective_insight": "Many suspects with clear motive"
+      },
+      {
+        "method_id": "blunt_force",
+        "compatibility": "medium",
+        "narrative_fit": "Attacked while investigating or meeting informant",
+        "vulnerability": "Meets dangerous people, goes to dangerous locations",
+        "evidence_pattern": ["meeting location evidence", "informant testimony", "victim's notes"],
+        "difficulty_score": 6,
+        "believability": "high",
+        "suspect_capability": "Requires physical strength or numbers",
+        "detective_insight": "Reformer's investigation led them to the killer"
+      },
+      {
+        "method_id": "staged_accident",
+        "compatibility": "high",
+        "narrative_fit": "Car accident, fall from height, drowned in river",
+        "vulnerability": "Investigating dangerous people, can be cornered",
+        "evidence_pattern": ["location matches investigation focus", "evidence of tampering"],
+        "difficulty_score": 7,
+        "believability": "high",
+        "suspect_capability": "Requires knowledge of victim's location and routine",
+        "detective_insight": "Victim was investigating their own killer"
+      }
+    ]
+  }
+]

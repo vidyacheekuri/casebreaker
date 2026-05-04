@@ -14,6 +14,7 @@ const FALLBACK_MODELS = ["/models/fenn.glb", "/models/victoria.glb", "/models/ol
 interface Props {
   speaking: boolean;
   stressed?: boolean;
+  stress?: number;
   modelPath?: string | null;
   modelUrl?: string | null;
   characterTimestamps?: CharacterTimestampRange[] | null;
@@ -61,6 +62,7 @@ function Lights() {
 export default function AvatarCanvas({
   speaking,
   stressed = false,
+  stress = 0,
   modelPath,
   modelUrl,
   characterTimestamps,
@@ -90,6 +92,7 @@ export default function AvatarCanvas({
           url={url}
           speaking={speaking}
           stressed={stressed}
+          stress={stress}
           characterTimestamps={characterTimestamps}
           visemeTimeline={visemeTimeline}
           speechElapsedMs={speechElapsedMs}

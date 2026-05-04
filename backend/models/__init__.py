@@ -11,7 +11,7 @@ from .session import (
     GenerationStatus,
     SessionState,
 )
-from .world import Character, Evidence, Victim, WorldState
+from .world import Character, Evidence, InvestigationRoom, Victim, WorldState
 
 __all__ = [
     "Character",
@@ -24,6 +24,7 @@ __all__ = [
     "DetectiveInstinct",
     "Evidence",
     "GenerationStatus",
+    "InvestigationRoom",
     "SessionState",
     "Victim",
     "WorldState",

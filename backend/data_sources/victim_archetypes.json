@@ -1,0 +1,93 @@
+[
+  {
+    "id": "respected_patriarch",
+    "archetype": "Respected Patriarch",
+    "social_position": "Head of household, patriarch of family or enterprise",
+    "typical_occupations": ["estate owner", "industrialist", "bank director", "retired general"],
+    "personality_traits": ["commanding presence", "old-fashioned values", "quick to anger", "secretly sentimental"],
+    "public_perception": "Authoritative, respectable, feared",
+    "private_secrets": ["failing health", "changing will", "hidden affair", "business collapse"],
+    "vulnerabilities": ["pride", "fear of losing control", "attachment to legacy"],
+    "relationship_to_suspects": ["dependent heirs", "nervous employees", "old friends with grievances"],
+    "typical_death_context": "power struggle within household or business",
+    "detective_clues_available": ["altered documents", "financial records", "personal correspondence", "witness testimony about recent changes"]
+  },
+  {
+    "id": "ambitious_new_money",
+    "archetype": "Ambitious New Money",
+    "social_position": "Newly wealthy outsider climbing social ladder",
+    "typical_occupations": ["self-made industrialist", "financier", "merchant", "publisher"],
+    "personality_traits": ["charming to outsiders", "ruthless in business", "socially insecure", "trophy-collector mentality"],
+    "public_perception": "Impressive but not quite trusted, wealthy but not refined",
+    "private_secrets": ["illegitimate past", "shady business practices", "affair", "purchased respectability"],
+    "vulnerabilities": ["fear of exposure", "need for approval", "pride in achievement"],
+    "relationship_to_suspects": ["romantic rivals", "business competitors", "social climbers", "scorned individuals"],
+    "typical_death_context": "someone threatens to expose them or steal their position",
+    "detective_clues_available": ["forged documents", "secret correspondence", "business ledgers", "social calendar"]
+  },
+  {
+    "id": "lonely_widow",
+    "archetype": "Wealthy Widow",
+    "social_position": "Independent woman of means, often isolated",
+    "typical_occupations": ["widow living on inheritance", "estate manager", "patron of arts", "philanthropist"],
+    "personality_traits": ["intelligent but lonely", "generous but lonely", "caught between propriety and desire", "nostalgic"],
+    "public_perception": "Sympathetic, respectable, slightly mysterious",
+    "private_secrets": ["new romance", "financial troubles", "disappointed in children", "seeking control after years of dependency"],
+    "vulnerabilities": ["loneliness", "desire for affection", "anxiety about dependence"],
+    "relationship_to_suspects": ["fortune hunters", "adult children", "new romantic interest", "scheming relatives"],
+    "typical_death_context": "someone fears her new independence or new relationship",
+    "detective_clues_available": ["personal letters", "social calendar", "will changes", "financial transactions"]
+  },
+  {
+    "id": "tyrannical_professional",
+    "archetype": "Tyrannical Professional",
+    "social_position": "Respected expert with power over others' careers",
+    "typical_occupations": ["headmistress", "editor", "museum director", "hospital administrator"],
+    "personality_traits": ["perfectionist", "controlling", "witheringly critical", "brilliant but brutal"],
+    "public_perception": "Formidable, respected, feared by underlings",
+    "private_secrets": ["plagiarism", "embezzled funds", "sexually exploitative behavior", "destroyed competitor's work"],
+    "vulnerabilities": ["fear of being exposed as fraud", "need for control", "deep insecurity"],
+    "relationship_to_suspects": ["professional underlings", "former protégés", "institutional rivals", "wronged employees"],
+    "typical_death_context": "someone she destroyed decides to strike back",
+    "detective_clues_available": ["institutional records", "employee testimonies", "personal journals", "office evidence"]
+  },
+  {
+    "id": "charismatic_charlatan",
+    "archetype": "Charismatic Charlatan",
+    "social_position": "Charming con artist or social manipulator",
+    "typical_occupations": ["spiritualist", "art dealer", "investment advisor", "society organizer"],
+    "personality_traits": ["effortlessly charming", "pathological liar", "performance artist", "parasitic"],
+    "public_perception": "Delightful, interesting, mysteriously alluring",
+    "private_secrets": ["elaborate fraud", "multiple identities", "blackmail scheme", "stolen goods"],
+    "vulnerabilities": ["need for admiration", "fear of discovery", "inability to stop performing"],
+    "relationship_to_suspects": ["marks/victims of fraud", "fellow conspirators", "jealous rivals", "creditors"],
+    "typical_death_context": "someone they defrauded decides vengeance, or con partner betrays them",
+    "detective_clues_available": ["forged documents", "false correspondence", "hidden identities", "financial trails"]
+  },
+  {
+    "id": "frail_elder",
+    "archetype": "Frail Elder",
+    "social_position": "Dependent on family, holding on to life and property",
+    "typical_occupations": ["retired", "invalid", "elder matriarch/patriarch", "property owner"],
+    "personality_traits": ["sharp mind in failing body", "bitter about decline", "clutching to control", "unpredictably generous or cruel"],
+    "public_perception": "Pitiable, but commands respect for longevity",
+    "private_secrets": ["revised will", "hidden savings", "illegitimate child", "affair with caretaker"],
+    "vulnerabilities": ["physical fragility", "fear of abandonment", "desperation to matter"],
+    "relationship_to_suspects": ["impatient heirs", "hired caretaker", "neglectful family", "new romantic interest"],
+    "typical_death_context": "someone impatient for inheritance or protecting their control",
+    "detective_clues_available": ["medication records", "will documents", "caretaker notes", "visitor logs"]
+  },
+  {
+    "id": "idealistic_reformer",
+    "archetype": "Idealistic Reformer",
+    "social_position": "Principled crusader threatening someone's interests",
+    "typical_occupations": ["journalist", "investigator", "activist", "clergy"],
+    "personality_traits": ["morally rigid", "zealous", "dismissive of compromise", "righteous"],
+    "public_perception": "Noble but tiresome, dangerous to the guilty",
+    "private_secrets": ["fabricated evidence", "personal vendetta disguised as principle", "hypocrisy"],
+    "vulnerabilities": ["righteousness", "need to be right", "inability to forgive"],
+    "relationship_to_suspects": ["people they've exposed", "those threatened by their investigation", "former allies disappointed in them"],
+    "typical_death_context": "someone they targeted strikes first to stop their crusade",
+    "detective_clues_available": ["investigation notes", "published articles", "correspondence with allies", "research documents"]
+  }
+]

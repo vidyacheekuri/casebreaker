@@ -1,13 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { evidenceLinkedSuspectLabel, useGameStore } from "@/lib/store";
-import EvidenceImage from "@/components/ui/EvidenceImage";
+import { useEffect } from "react";
+import { useGameStore } from "@/lib/store";
+import CorkboardLayout from "@/components/ui/EvidenceBoard/CorkboardLayout";
 
 export default function EvidenceScreen() {
-  const { activeSlot, discoveredEvidence, goTo } = useGameStore();
-  const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(null);
+  const {
+    activeSlot,
+    discoveredEvidence,
+    reviewedEvidenceIds,
+    accusationEvidenceIds,
+    goTo,
+    markEvidenceReviewed,
+  } = useGameStore();
 
   useEffect(() => {
     if (!activeSlot) {
@@ -37,73 +43,38 @@ export default function EvidenceScreen() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.35 }}
     >
-      <div className="flex items-center justify-between border-b border-white/5 px-5 py-3">
+      <div className="flex items-center justify-between border-b border-white/10 bg-[rgba(7,14,26,0.7)] px-5 py-2.5 backdrop-blur-md">
         <div>
-          <div className="text-[10px] uppercase tracking-[4px] text-[#D4A843]">Evidence Board</div>
-          <div className="mt-0.5 text-[10px] text-[#334455]">
+          <div className="text-[32px] font-bold uppercase leading-tight tracking-[4px] text-[#D4A843]">Evidence Board</div>
+          <div className="mt-0.5 text-[13px] font-semibold text-[#E8E0D0]">
             {discoveredCards.length} of {activeSlot.evidence.length} clues collected
           </div>
         </div>
         <button
           onClick={() => goTo("manor")}
-          className="text-[10px] uppercase tracking-wider text-[#445566] transition-colors hover:text-[#C8D0DC]"
+          className="text-label uppercase tracking-wider text-[#445566] transition-colors hover:text-[#C8D0DC]"
         >
           ← Back to Manor
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="flex-1 overflow-hidden px-5 py-3">
         {discoveredCards.length === 0 ? (
-          <div className="mt-20 text-center text-sm italic text-[#556677]" style={{ fontFamily: "Georgia, serif" }}>
+          <div className="mt-20 text-center text-body italic text-[#556677]" style={{ fontFamily: "Georgia, serif" }}>
             No evidence collected yet. Search locations to discover clues.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {discoveredCards.map((evidence) => {
-              const selected = selectedEvidenceId === evidence.evidence_id;
-              return (
-                <motion.button
-                  key={evidence.evidence_id}
-                  onClick={() =>
-                    setSelectedEvidenceId(selectedEvidenceId === evidence.evidence_id ? null : evidence.evidence_id)
-                  }
-                  className="border p-4 text-left"
-                  style={{
-                    background: selected ? "rgba(212,168,67,.08)" : "rgba(255,255,255,.02)",
-                    borderColor: selected ? "rgba(212,168,67,.45)" : "rgba(255,255,255,.1)",
-                  }}
-                  whileHover={{ borderColor: "rgba(212,168,67,.38)" }}
-                >
-                  <div className="flex items-center gap-3">
-                    <EvidenceImage evidence={evidence} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="text-xs font-semibold tracking-wide text-[#E8E0D0]">{evidence.name}</div>
-                        <div className="text-[10px] text-[#D4A843]">{selected ? "▲" : "▼"}</div>
-                      </div>
-                      <div className="mt-1 text-[9px] uppercase tracking-wider text-[#667788]">{evidence.location}</div>
-                    </div>
-                  </div>
-
-                  {selected && (
-                    <div className="mt-3 border-t border-white/10 pt-3">
-                      <p className="text-xs leading-relaxed text-[#8899AA]" style={{ fontFamily: "Georgia, serif" }}>
-                        {evidence.description}
-                      </p>
-                      <div className="mt-2 text-[9px] uppercase tracking-wider text-[#D4A843]">
-                        Linked suspect: {evidenceLinkedSuspectLabel(activeSlot, evidence)}
-                        {evidence.is_red_herring ? " (unverified)" : ""}
-                      </div>
-                    </div>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
+          <CorkboardLayout
+            evidence={discoveredCards}
+            activeSlot={activeSlot}
+            reviewedEvidenceIds={reviewedEvidenceIds}
+            accusationEvidenceIds={accusationEvidenceIds}
+            onReview={markEvidenceReviewed}
+          />
         )}
 
         {missingCount > 0 && (
-          <div className="mt-6 text-[10px] uppercase tracking-[3px] text-[#445566]">
+          <div className="mt-2 text-label uppercase tracking-[3px] text-[#445566]">
             {missingCount} clues still undiscovered
           </div>
         )}
@@ -111,13 +82,13 @@ export default function EvidenceScreen() {
 
       {discoveredCards.length >= Math.min(3, activeSlot.evidence.length) && (
         <motion.div
-          className="border-t border-white/5 px-5 py-3"
+          className="border-t border-white/5 px-5 py-2.5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           <button
             onClick={() => goTo("accusation")}
-            className="w-full py-3 text-xs uppercase tracking-[3px]"
+            className="w-full py-2.5 text-caption uppercase tracking-[3px]"
             style={{
               background: "rgba(212,168,67,.08)",
               border: "1px solid rgba(212,168,67,.3)",

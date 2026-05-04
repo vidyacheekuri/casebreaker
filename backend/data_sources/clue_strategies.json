@@ -1,0 +1,66 @@
+[
+  {
+    "id": "dense_clustering",
+    "strategy": "Dense clustering",
+    "description": "Most clues concentrated in one location with few in others",
+    "detective_experience": "Feels like crime scene focus, detailed investigation of one area",
+    "distribution_pattern": "1-2 dense rooms (3-4 clues each), rest empty or sparse",
+    "best_for": "scenes where killer made a critical mistake in one place, obvious locus of activity"
+  },
+  {
+    "id": "scattered_breadcrumb",
+    "strategy": "Scattered breadcrumb trail",
+    "description": "One clue per room leading detective through entire location",
+    "detective_experience": "Feels like progressive revelation, discovering motive layer by layer",
+    "distribution_pattern": "5 clues in 5 different rooms, minimal duplication",
+    "best_for": "stories where killer left a trail of evidence across the property, telling a story through location"
+  },
+  {
+    "id": "hidden_in_plain_sight",
+    "strategy": "Hidden in plain sight",
+    "description": "Crucial clues in common areas with minimal protection, overlooked because of ordinariness",
+    "detective_experience": "Feels like detective must look twice, realize significance of ordinary objects",
+    "distribution_pattern": "Clues spread across 3-4 common rooms, indistinguishable from normal items",
+    "best_for": "clever crimes where killer relies on psychological bias against noticing familiar things"
+  },
+  {
+    "id": "escalating_specificity",
+    "strategy": "Escalating specificity",
+    "description": "Clues become more specific and valuable as detective searches, rewarding thorough investigation",
+    "detective_experience": "Feels like genuine detective work: surface clues lead to deeper understanding",
+    "distribution_pattern": "Generic clues in many places, specific clues only in thoroughly searched locations",
+    "best_for": "methodical mysteries where persistence pays off, encouraging exhaustive search"
+  },
+  {
+    "id": "geographic_separation",
+    "strategy": "Geographic separation",
+    "description": "Motive clues in private areas, method clues in common areas, alibi-breaking clues elsewhere",
+    "detective_experience": "Feels like detective must synthesize information from different regions",
+    "distribution_pattern": "Clue types segregated by location: bedroom area, common area, service area",
+    "best_for": "complex crimes requiring detective to connect disparate locations into coherent narrative"
+  },
+  {
+    "id": "temporal_ordering",
+    "strategy": "Temporal ordering",
+    "description": "Clues positioned to reveal events in chronological order when found systematically",
+    "detective_experience": "Feels like detective is reconstructing the sequence of the crime",
+    "distribution_pattern": "Clues arranged to tell timeline story through discovery order, not location",
+    "best_for": "crimes where sequence of events is crucial, detective must understand 'when' not just 'what'"
+  },
+  {
+    "id": "suspect_contamination",
+    "strategy": "Suspect contamination",
+    "description": "Each suspect has implicated clues in proximity to where they were seen",
+    "detective_experience": "Feels like natural suspicion emerging from proximity, but some clues are false leads",
+    "distribution_pattern": "Clues distributed near each suspect's known location, red herrings mixed in",
+    "best_for": "mysteries where physical evidence seems to point to wrong suspect initially"
+  },
+  {
+    "id": "private_public_contrast",
+    "strategy": "Private vs. public contrast",
+    "description": "Public areas have innocuous clues, private areas reveal true secrets and motives",
+    "detective_experience": "Feels like invasion of privacy reveals truth, contrast between person's public and private self",
+    "distribution_pattern": "Shallow clues in public rooms, deep secrets in bedrooms/studies/private spaces",
+    "best_for": "character-driven mysteries where true self is hidden beneath social facade"
+  }
+]

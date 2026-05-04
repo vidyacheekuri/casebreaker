@@ -1,0 +1,67 @@
+[
+  {
+    "id": "victorian_1880s",
+    "period": "Victorian Era (1880s)",
+    "era_flavor": "Gas lamps, rigid propriety, industrial boom, telegram as cutting-edge technology",
+    "social_constraints": "Strict gender roles, class hierarchy paramount, scandal is social death",
+    "communication_style": "Formal correspondence, sparse telegrams, face-to-face only in social settings",
+    "technology": "No electricity in many homes, gas lighting, horse-drawn carriages, manual household work",
+    "crime_solving_tools": "Scotland Yard methods, written testimony, physical evidence, observation",
+    "typical_activities": "Evening cards, formal dinners, calling hours, church attendance, private consultations",
+    "secrets_leverage": "Adultery, illegitimacy, bankruptcy, criminal associations, 'unsuitable' relationships",
+    "death_methods_fitting": ["poisoned_drink", "staged_accident", "blunt_force", "ligature_strangulation"],
+    "setting_details": "Gas sconces, heavy furniture, velvet drapes, candlelight supplementing gas, servants everywhere"
+  },
+  {
+    "id": "edwardian_1900s",
+    "period": "Edwardian Era (1900s-1910s)",
+    "era_flavor": "Electricity emerging, motorcars appearing, optimistic modernity meets lingering Victorianism",
+    "social_constraints": "Gender roles softening slightly, class still rigid, women gaining some independence",
+    "communication_style": "Telephone calls becoming common, longer visiting hours permitted, formal letters",
+    "technology": "Electric lighting in wealthy homes, early automobiles, telephone service, gas still common",
+    "crime_solving_tools": "Police photography, handwriting analysis, fingerprints emerging, telephone investigations",
+    "typical_activities": "Motor car outings, telephone conversations, tennis parties, theatrical evening, motoring clubs",
+    "secrets_leverage": "Divorce scandal, illegitimate children, gambling debts, affairs with modern women",
+    "death_methods_fitting": ["poisoned_drink", "electrocution", "motor accident", "exposure"],
+    "setting_details": "Mixed gas and electric lighting, Art Nouveau furnishings, telephone in study, motor car in garage"
+  },
+  {
+    "id": "jazz_age_1920s",
+    "period": "Jazz Age (1920s)",
+    "era_flavor": "Prohibition, modern women, motor cars everywhere, radio broadcasts, fast life",
+    "social_constraints": "Gender roles breaking down, generational conflict intense, moral rebellion",
+    "communication_style": "Telephone primary, written letters less formal, radio broadcasts public but intimate",
+    "technology": "Electricity standard, telephones commonplace, radio broadcasts, automobiles everywhere, new appliances",
+    "crime_solving_tools": "Police forensics, fingerprint databases, telephone records, ballistics analysis",
+    "typical_activities": "Jazz club evenings, motoring to country, radio listening parties, cocktail gatherings, speakeasy nights",
+    "secrets_leverage": "Bootlegging involvement, affair with person of different race, illegitimate modern child, homosexuality",
+    "death_methods_fitting": ["shooting", "poisoned_drink", "overdose", "electrocution", "motor accident"],
+    "setting_details": "Electric lighting throughout, radios present, motor cars, Art Deco furnishings, telephones upstairs and downstairs"
+  },
+  {
+    "id": "golden_age_1930s",
+    "period": "Golden Age of Detection (1930s)",
+    "era_flavor": "Depression-era anxiety, radio dramas, streamlined modernity, mystery novels everywhere",
+    "social_constraints": "Economic status paramount, class more fluid due to Depression, gender roles reasserted",
+    "communication_style": "Telephones ubiquitous, radio broadcasts widely heard, written communication less formal",
+    "technology": "Radios in every home, automobiles standard, new electrical appliances, modern plumbing",
+    "crime_solving_tools": "Forensic science established, fingerprint comparison, toxicology, police databases",
+    "typical_activities": "Radio mystery serials, motoring, cocktail parties, cinema evenings, newspaper reading",
+    "secrets_leverage": "Economic desperation, illegitimate Depression baby, racketeer connections, financial fraud",
+    "death_methods_fitting": ["poisoned_drink", "shooting", "car accident", "electrocution", "overdose"],
+    "setting_details": "Radio in parlor, modern kitchen appliances, bathroom with modern fixtures, electric lighting, fast motor cars"
+  },
+  {
+    "id": "post_war_1950s",
+    "period": "Post-War Era (1950s)",
+    "era_flavor": "Prosperity, television arriving, atomic age optimism, conformity enforced, secrets hidden",
+    "social_constraints": "Gender roles strongly reasserted, conformity enforced, homosexuality deeply closeted, class defined by consumption",
+    "communication_style": "Telephone socially acceptable, television in living room, gossip through social clubs",
+    "technology": "Televisions arriving, electric appliances modern, automobiles sleek and powerful, new synthetic materials",
+    "crime_solving_tools": "Forensic labs established, fingerprints standard, toxicology advanced, police with vehicles and radios",
+    "typical_activities": "Television watching, cocktail parties, suburban gatherings, automobile drives, department store shopping",
+    "secrets_leverage": "Infidelity, homosexuality, illegitimate child from past, business failure, dangerous associations",
+    "death_methods_fitting": ["poisoned_drink", "car accident", "electrocution", "shooting", "prescription overdose"],
+    "setting_details": "Television set in living room, electric kitchen, modern bathroom, automobiles in garage, plastic and chrome furnishings"
+  }
+]

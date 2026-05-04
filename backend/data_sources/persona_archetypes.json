@@ -64,5 +64,71 @@
     "speech_style": "polished small talk, quick reframing, persuasive confidence",
     "secret_tendencies": ["embezzlement", "blackmail arrangement", "forged credentials"],
     "visual_cues": "stylish period clothing, confident posture, immaculate accessories, alert eyes"
+  },
+  {
+    "id": "bitter_perfectionist",
+    "archetype": "bitter perfectionist",
+    "preferred_roles": ["killer", "primary suspect"],
+    "occupations": ["retired professor", "meticulous accountant", "museum curator", "head servant"],
+    "relationship_styles": ["critical superior", "demanding instructor", "exacting administrator"],
+    "personality_core": "relentlessly critical of themselves and others, seeing flaws everywhere",
+    "speech_style": "corrective remarks, exasperated sighs, pointed corrections to others' errors",
+    "secret_tendencies": ["hoarded resentment", "documented grievances", "sabotaged competitor's work"],
+    "visual_cues": "precisely arranged clothing, rigid posture, thin-lipped expression, tapping fingers"
+  },
+  {
+    "id": "nervous_scholar",
+    "archetype": "nervous scholar",
+    "preferred_roles": ["innocent", "supporting suspect"],
+    "occupations": ["antiquarian librarian", "academic researcher", "museum assistant", "bookbinder"],
+    "relationship_styles": ["devoted student", "timid expert", "careful preservationist"],
+    "personality_core": "brilliant but anxious, lost in thought, easily startled by interruption",
+    "speech_style": "hesitant technical language, nervous corrections, trailing off into uncertainty",
+    "secret_tendencies": ["undisclosed expertise", "withheld scholarly finding", "research obsession"],
+    "visual_cues": "ink-stained fingers, spectacles, rumpled academic wear, distant gaze"
+  },
+  {
+    "id": "calculating_socialite",
+    "archetype": "calculating socialite",
+    "preferred_roles": ["killer", "red herring"],
+    "occupations": ["widow of means", "society organizer", "patron of arts", "hotel proprietress"],
+    "relationship_styles": ["gracious hostess", "social manipulator", "exclusive confidant"],
+    "personality_core": "effortlessly charming on the surface, but ruthlessly managing every interaction",
+    "speech_style": "flattering compliments, subtle digs disguised as concern, calculated sympathy",
+    "secret_tendencies": ["secret affairs", "financial manipulation", "social sabotage"],
+    "visual_cues": "impeccable jewels, fashionable silhouette, controlled smile, calculating eyes"
+  },
+  {
+    "id": "reckless_gambler",
+    "archetype": "reckless gambler",
+    "preferred_roles": ["killer", "red herring"],
+    "occupations": ["young heir", "card player", "sport enthusiast", "pleasure seeker"],
+    "relationship_styles": ["charming wastrel", "impulsive friend", "unreliable romantic"],
+    "personality_core": "impulsive and thrill-seeking, dismissive of consequences, living for the moment",
+    "speech_style": "rapid-fire bragging, boastful plans, reckless admissions, quick deflections",
+    "secret_tendencies": ["mounting debts", "rigged games", "promised money never delivered"],
+    "visual_cues": "fashionable excess, disheveled hair, flushed cheeks, restless energy"
+  },
+  {
+    "id": "loyal_servant",
+    "archetype": "loyal servant",
+    "preferred_roles": ["innocent", "secondary suspect"],
+    "occupations": ["longtime attendant", "family retainer", "devoted secretary", "faithful companion"],
+    "relationship_styles": ["unquestioning loyalty", "invisible presence", "protective shield"],
+    "personality_core": "utterly devoted to their employer, expecting nothing in return, seeing no faults",
+    "speech_style": "deferential tone, unwaivering support, defensive of employer, sparse personal opinion",
+    "secret_tendencies": ["withheld uncomfortable truth", "protected employer's secret", "unjust accusation endured"],
+    "visual_cues": "worn but tidy formal clothes, downcast eyes, patient posture, faded presence"
+  },
+  {
+    "id": "conflicted_professional",
+    "archetype": "conflicted professional",
+    "preferred_roles": ["innocent", "secondary suspect"],
+    "occupations": ["family lawyer", "trusted physician", "accountant to the household", "estate manager"],
+    "relationship_styles": ["bound by confidence", "ethically constrained", "silently disapproving"],
+    "personality_core": "trapped between duty and conscience, knowing dangerous truths they cannot share",
+    "speech_style": "careful word choice, professional restraint, evasive when pressed, guilty silences",
+    "secret_tendencies": ["forbidden knowledge", "ethical quandary", "suppressed warning"],
+    "visual_cues": "professional attire, pinched expression, clasped hands, weary eyes"
   }
 ]

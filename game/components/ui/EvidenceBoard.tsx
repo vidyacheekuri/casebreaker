@@ -29,9 +29,9 @@ function statusClass(status: ReturnType<typeof statusFor>): string {
 
 function DetailRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="rounded-md border border-white/10 bg-black/10 px-3 py-2.5">
-      <div className="text-[10px] uppercase tracking-[2px] text-[#6E7C92]">{label}</div>
-      <div className="mt-1 text-sm leading-relaxed text-[#D6DCE7]" style={{ fontFamily: "Georgia, serif" }}>
+    <div className="rounded-md border border-white/10 bg-[rgba(7,14,26,0.5)] px-3 py-2.5 backdrop-blur-md">
+      <div className="text-label uppercase tracking-[2px] text-[#6E7C92]">{label}</div>
+      <div className="mt-1 text-body leading-relaxed text-[#D6DCE7]" style={{ fontFamily: "Georgia, serif" }}>
         {children}
       </div>
     </div>
@@ -66,17 +66,17 @@ export default function EvidenceBoard() {
       : null;
 
   return (
-    <aside className="flex h-full w-[34%] min-w-[260px] max-w-[380px] flex-shrink-0 flex-col overflow-hidden border-l border-white/10 bg-[#0B1526] text-white">
-      <div className="sticky top-0 z-10 border-b border-white/10 bg-[#0B1526]/95 px-4 py-4 backdrop-blur">
-        <div className="text-sm uppercase tracking-[3px] text-[#D4A843]">Evidence Board</div>
-        <div className="mt-1 text-xs text-[#6E7C92]">Collected Clues</div>
+    <aside className="flex h-full w-[28%] min-w-[240px] max-w-[330px] flex-shrink-0 flex-col overflow-hidden border-l border-[#2a2a3a] bg-[#05070c]/92 font-mono text-white shadow-[-14px_0_36px_rgba(0,0,0,0.35)] backdrop-blur-md">
+      <div className="sticky top-0 z-10 border-b border-[#2a2a3a] bg-[#060910]/95 px-4 py-3 backdrop-blur-md">
+        <div className="text-label uppercase tracking-[3px] text-[#e8e8e8]">Evidence</div>
+        <div className="mt-1 text-[10px] text-[#7d8796]">Collected clues</div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {!selectedEvidence ? (
-          <div className="space-y-3 px-4 py-4">
+          <div className="space-y-3 px-3 py-3">
             {discoveredItems.length === 0 ? (
-              <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 text-sm italic text-[#6E7C92]">
+              <div className="border border-[#2a2a3a] bg-[#0a0e1a]/85 p-4 text-body italic text-[#8a96a6] backdrop-blur-md shadow-[0_8px_28px_rgba(0,0,0,0.28)]">
                 Search the manor to collect evidence for interrogation and accusation.
               </div>
             ) : null}
@@ -97,11 +97,14 @@ export default function EvidenceBoard() {
                     setSelectedEvidenceId(item.evidence_id);
                     markEvidenceReviewed(item.evidence_id);
                   }}
-                  className="w-full rounded-lg border p-3 text-left transition-all duration-200 hover:border-white/20 hover:bg-white/[0.05]"
+                  className="w-full border border-[#2a2a3a] p-3 text-left opacity-85 backdrop-blur-md transition-all duration-300 hover:border-[#1e3a5f] hover:opacity-100 hover:shadow-[0_10px_28px_rgba(30,58,95,0.12)]"
                   style={{
-                    background: selected ? "rgba(212,168,67,.08)" : "rgba(255,255,255,.03)",
-                    borderColor: status === "Key" ? "rgba(212,168,67,.22)" : selected ? "rgba(212,168,67,.28)" : "rgba(255,255,255,.1)",
-                    boxShadow: selected ? "0 0 0 1px rgba(212,168,67,.1) inset" : "none",
+                    background:
+                      selected || status === "Key"
+                        ? "linear-gradient(135deg, rgba(184,134,11,.12), rgba(10,14,26,0.75))"
+                        : "rgba(10,14,26,0.72)",
+                    borderColor: status === "Key" ? "rgba(184,134,11,.35)" : selected ? "rgba(30,58,95,.7)" : undefined,
+                    boxShadow: selected ? "0 0 0 1px rgba(30,58,95,.35) inset" : undefined,
                   }}
                   whileHover={{ y: -1 }}
                 >
@@ -110,19 +113,19 @@ export default function EvidenceBoard() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold leading-snug text-[#E8ECF3]" style={{ fontFamily: "Georgia, serif" }}>
+                          <div className="text-xs font-semibold leading-snug text-[#C7D0DC]" style={{ fontFamily: "Georgia, serif" }}>
                             {item.name}
                           </div>
-                          <div className="mt-1 text-[11px] uppercase tracking-[2px] text-[#6E7C92]">
+                          <div className="mt-1 text-caption uppercase tracking-[2px] text-[#6E7C92]">
                             {evidenceCategory(item)}
                           </div>
                         </div>
-                        <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] uppercase tracking-[1.8px] ${statusClass(status)}`}>
+                        <span className={`shrink-0 rounded-full border px-2 py-1 text-label uppercase tracking-[1.8px] ${statusClass(status)}`}>
                           {status}
                         </span>
                       </div>
 
-                      <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-caption">
                         <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[#93A4BA]">
                           {evidenceLinkedSuspectLabel(activeSlot, item)}
                         </span>
@@ -148,24 +151,24 @@ export default function EvidenceBoard() {
             <button
               type="button"
               onClick={() => setSelectedEvidenceId(null)}
-              className="mb-4 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] uppercase tracking-[2px] text-[#B7C2D3] transition-colors hover:bg-white/[0.06]"
+              className="mb-4 rounded-md border border-white/10 bg-[rgba(7,14,26,0.55)] px-3 py-2 text-caption uppercase tracking-[2px] text-[#B7C2D3] backdrop-blur-md transition-all duration-300 hover:border-[#D4A843]/25 hover:shadow-[0_8px_28px_rgba(212,168,67,0.1)]"
             >
               Back
             </button>
 
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="border border-[#2a2a3a] bg-[#0a0e1a]/88 p-4 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-shadow duration-300">
               <EvidenceImage evidence={selectedEvidence} size="detail" />
 
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-lg font-semibold text-[#F1F3F7]" style={{ fontFamily: "Georgia, serif" }}>
+                  <div className="text-h2 font-semibold text-[#F1F3F7]" style={{ fontFamily: "Georgia, serif" }}>
                     {selectedEvidence.name}
                   </div>
-                  <div className="mt-1 text-[11px] uppercase tracking-[2px] text-[#6E7C92]">
+                  <div className="mt-1 text-caption uppercase tracking-[2px] text-[#6E7C92]">
                     {evidenceCategory(selectedEvidence)}
                   </div>
                 </div>
-                <span className={`rounded-full border px-2 py-1 text-[10px] uppercase tracking-[1.8px] ${statusClass(statusFor(selectedEvidence, reviewedEvidenceIds.includes(selectedEvidence.evidence_id), selectedEvidenceIds.includes(selectedEvidence.evidence_id)))}`}>
+                <span className={`rounded-full border px-2 py-1 text-label uppercase tracking-[1.8px] ${statusClass(statusFor(selectedEvidence, reviewedEvidenceIds.includes(selectedEvidence.evidence_id), selectedEvidenceIds.includes(selectedEvidence.evidence_id)))}`}>
                   {statusFor(selectedEvidence, reviewedEvidenceIds.includes(selectedEvidence.evidence_id), selectedEvidenceIds.includes(selectedEvidence.evidence_id))}
                 </span>
               </div>
@@ -192,7 +195,7 @@ export default function EvidenceBoard() {
                 <button
                   type="button"
                   onClick={() => toggleEvidenceSelection(selectedEvidence.evidence_id)}
-                  className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] uppercase tracking-[2px] transition-colors hover:bg-white/[0.06]"
+                  className="rounded-md border border-white/10 bg-[rgba(7,14,26,0.5)] px-3 py-2 text-caption uppercase tracking-[2px] backdrop-blur-md transition-all duration-300 hover:border-[#D4A843]/30 hover:shadow-[0_8px_24px_rgba(212,168,67,0.12)]"
                   style={{
                     color: selectedEvidenceIds.includes(selectedEvidence.evidence_id) ? "#D4A843" : "#B7C2D3",
                   }}
@@ -207,7 +210,7 @@ export default function EvidenceBoard() {
                       !accusationEvidenceIds.includes(selectedEvidence.evidence_id)
                     )
                   }
-                  className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] uppercase tracking-[2px] transition-colors hover:bg-white/[0.06]"
+                  className="rounded-md border border-white/10 bg-[rgba(7,14,26,0.5)] px-3 py-2 text-caption uppercase tracking-[2px] backdrop-blur-md transition-all duration-300 hover:border-[#D4A843]/30 hover:shadow-[0_8px_24px_rgba(212,168,67,0.12)]"
                   style={{
                     color: accusationEvidenceIds.includes(selectedEvidence.evidence_id) ? "#D4A843" : "#B7C2D3",
                   }}

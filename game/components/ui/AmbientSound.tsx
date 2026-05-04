@@ -5,6 +5,7 @@ import { useGameStore } from "@/lib/store";
 
 const RAIN_SCREENS = new Set(["cinematic", "manor", "room", "evidence", "interrogation", "accusation", "verdict"]);
 const CLOCK_SCREENS = new Set(["cinematic", "manor", "evidence"]);
+const DRONE_SCREENS = new Set(["cinematic"]);
 const HEART_SCREENS = new Set(["interrogation"]);
 
 function makeBrownNoiseBuffer(ctx: AudioContext): AudioBuffer {
@@ -32,6 +33,7 @@ export default function AmbientSound() {
   const masterRef = useRef<GainNode | null>(null);
   const rainGainRef = useRef<GainNode | null>(null);
   const clockGainRef = useRef<GainNode | null>(null);
+  const droneGainRef = useRef<GainNode | null>(null);
   const heartGainRef = useRef<GainNode | null>(null);
   const clockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const heartTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -71,6 +73,25 @@ export default function AmbientSound() {
     clockGain.gain.value = 0;
     clockGain.connect(master);
     clockGainRef.current = clockGain;
+
+    const droneGain = ctx.createGain();
+    droneGain.gain.value = 0;
+    const droneFilter = ctx.createBiquadFilter();
+    droneFilter.type = "lowpass";
+    droneFilter.frequency.value = 220;
+    const droneA = ctx.createOscillator();
+    droneA.type = "sawtooth";
+    droneA.frequency.value = 42;
+    const droneB = ctx.createOscillator();
+    droneB.type = "sine";
+    droneB.frequency.value = 57;
+    droneA.connect(droneFilter);
+    droneB.connect(droneFilter);
+    droneFilter.connect(droneGain);
+    droneGain.connect(master);
+    droneA.start();
+    droneB.start();
+    droneGainRef.current = droneGain;
 
     const heartGain = ctx.createGain();
     heartGain.gain.value = 0;
@@ -158,6 +179,17 @@ export default function AmbientSound() {
 
   useEffect(() => {
     const ctx = ctxRef.current;
+    const gain = droneGainRef.current;
+    if (!ctx || !gain) {
+      return;
+    }
+
+    const target = DRONE_SCREENS.has(screen) ? 0.035 : 0;
+    gain.gain.setTargetAtTime(target, ctx.currentTime, 1.4);
+  }, [screen]);
+
+  useEffect(() => {
+    const ctx = ctxRef.current;
     const gain = clockGainRef.current;
     if (!ctx || !gain) {
       return;
@@ -221,6 +253,25 @@ export default function AmbientSound() {
       }
       ctxRef.current?.close();
     };
+  }, []);
+
+  useEffect(() => {
+    let frame = 0;
+    let smoothed = 0;
+    const tick = () => {
+      const ctx = ctxRef.current;
+      if (ctx) {
+        const rain = rainGainRef.current?.gain.value ?? 0;
+        const heart = heartGainRef.current?.gain.value ?? 0;
+        const clockPulse = clockTimerRef.current != null ? 0.14 : 0;
+        const raw = Math.min(1, rain * 6.5 + heart * 8.5 + clockPulse);
+        smoothed += (raw - smoothed) * 0.14;
+        useGameStore.getState().setAmbientAudioIntensity(smoothed);
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   return null;

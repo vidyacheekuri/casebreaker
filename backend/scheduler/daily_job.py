@@ -39,8 +39,15 @@ async def generate_daily_slots(connection) -> dict:
         novelty = detect_duplicate(world, prior_fingerprints + list(fingerprints.values()))
         same_day_novelty = detect_same_day_similarity(world, accepted_worlds)
         if novelty.is_duplicate or same_day_novelty.is_too_similar:
+            best_world = world
+            best_novelty = novelty
             for variant_seed in range(1, (MAX_GENERATION_RETRIES * 3) + 1):
-                refreshed = generate_slot_world(case_date, world.slot_index, variant_seed=variant_seed)
+                refreshed = await asyncio.to_thread(
+                    generate_slot_world,
+                    case_date,
+                    world.slot_index,
+                    variant_seed,
+                )
                 retry_novelty = detect_duplicate(
                     refreshed,
                     prior_fingerprints + list(fingerprints.values()),
@@ -50,14 +57,15 @@ async def generate_daily_slots(connection) -> dict:
                     world = refreshed
                     novelty = retry_novelty
                     break
+                if not retry_novelty.is_duplicate:
+                    best_world = refreshed
+                    best_novelty = retry_novelty
             else:
-                reason = same_day_novelty.reason or "too similar to an existing story"
-                raise RuntimeError(
-                    f"Could not generate a distinct slot {world.slot_index}: {reason}."
-                )
+                world = best_world
+                novelty = best_novelty
         accepted_worlds.append(world)
         fingerprints[world.slot_id] = novelty.fingerprint
-        embed_world(world)
+        await asyncio.to_thread(embed_world, world)
 
     asset_rows: list[dict] = []
     for world in accepted_worlds:
@@ -68,7 +76,11 @@ async def generate_daily_slots(connection) -> dict:
                 f"Slot {world.slot_id} has only {playable_count} playable suspect models."
             )
 
-    keywords = extract_daily_keywords(accepted_worlds, case_date=case_date)
+    keywords = await asyncio.to_thread(
+        extract_daily_keywords,
+        accepted_worlds,
+        case_date,
+    )
     await replace_daily_slots(
         connection=connection,
         worlds=accepted_worlds,

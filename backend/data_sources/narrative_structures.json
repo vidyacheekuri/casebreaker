@@ -1,0 +1,82 @@
+[
+  {
+    "id": "chronological_reveal",
+    "structure": "Chronological Revelation",
+    "narrative_flow": "Events unfold in timeline order, clues reveal sequence of murder",
+    "detective_experience": "Feels like watching crime unfold backward through time",
+    "evidence_placement": "Clues arranged by when they occurred, not by importance",
+    "emotional_arc": "Building dread as timeline approaches murder moment",
+    "climax_moment": "Detective realizes exact sequence of movements",
+    "best_for": "methods where timing of specific actions matters crucially"
+  },
+  {
+    "id": "slow_burn_suspicion",
+    "structure": "Slow-Burn Suspicion",
+    "narrative_flow": "Innocent suspect appears increasingly suspicious as trivial details accumulate",
+    "detective_experience": "Feels like watching someone slowly become guilty before your eyes",
+    "evidence_placement": "Minor inconsistencies mount, small lies become patterns",
+    "emotional_arc": "Growing unease from uncertainty, then sudden certainty",
+    "climax_moment": "One small detail that makes all previous lies fall into pattern",
+    "best_for": "psychological crimes where guilt builds through character portrait"
+  },
+  {
+    "id": "false_solution",
+    "structure": "False Solution Then Revision",
+    "narrative_flow": "Detective solves for one killer, then evidence forces reconsideration",
+    "detective_experience": "Feels like being deliberately misled, then vindicated by seeking truth",
+    "evidence_placement": "Obvious clues point to one suspect, subtle clues point to another",
+    "emotional_arc": "Confidence then confusion then resolution",
+    "climax_moment": "Realization that 'obvious' suspect is innocent after all",
+    "best_for": "stories with dual motives or mistaken identity elements"
+  },
+  {
+    "id": "escalating_stakes",
+    "structure": "Escalating Stakes",
+    "narrative_flow": "Initial crime appears simple, each investigation layer reveals deeper conspiracy",
+    "detective_experience": "Feels like unraveling a knot, each pull reveals more complexity",
+    "evidence_placement": "Surface clues point to simple motive, deeper investigation reveals hidden layers",
+    "emotional_arc": "Initial satisfaction at solution becomes horror at true scope",
+    "climax_moment": "Realization that crime is part of larger pattern",
+    "best_for": "crimes driven by institutional corruption or family secrets"
+  },
+  {
+    "id": "motive_revelation",
+    "structure": "Motive Revelation",
+    "narrative_flow": "Suspect's secret motive only becomes clear near the end",
+    "detective_experience": "Feels like getting to know suspects deeply, then seeing them anew",
+    "evidence_placement": "Clues to method scattered, but motive evidence hidden until end",
+    "emotional_arc": "Understanding grows slowly from small human moments",
+    "climax_moment": "Understanding why, which makes how and who suddenly inevitable",
+    "best_for": "passion crimes or revenge-driven murders where motive is hidden"
+  },
+  {
+    "id": "alibi_destruction",
+    "structure": "Alibi Destruction",
+    "narrative_flow": "Each suspect's alibi falls apart one by one under examination",
+    "detective_experience": "Feels like playing chess, checking and eliminating possibilities",
+    "evidence_placement": "Alibis seem solid at first, small cracks appear, then collapse",
+    "emotional_arc": "Growing frustration at alibis holding, relief as truth emerges",
+    "climax_moment": "Final alibi crumbles, revealing truth through process of elimination",
+    "best_for": "locked room mysteries or tight timeline crimes"
+  },
+  {
+    "id": "red_herring_unmasking",
+    "structure": "Red Herring Unmasking",
+    "narrative_flow": "Most obvious suspect is guilty BUT for wrong reason or method",
+    "detective_experience": "Feels like solving puzzle then realizing complete misunderstanding",
+    "evidence_placement": "Obvious clues point to obvious suspect correctly, but interpretation is wrong",
+    "emotional_arc": "Confidence in solution, then embarrassment at misreading",
+    "climax_moment": "Suspect confesses but to different crime than suspected",
+    "best_for": "stories with layered guilt or multiple crimes in one night"
+  },
+  {
+    "id": "victim_agency",
+    "structure": "Victim Agency Revealed",
+    "narrative_flow": "Victim's own actions the night of murder become crucial to understanding",
+    "detective_experience": "Feels like learning about victim as person, not just corpse",
+    "evidence_placement": "Victim's movements and intentions slowly emerge from testimony",
+    "emotional_arc": "Sympathy and understanding for victim, then recontextualization of crime",
+    "climax_moment": "Realization that victim's action that evening triggered murder",
+    "best_for": "crimes of passion or mercy where victim's choices matter"
+  }
+]

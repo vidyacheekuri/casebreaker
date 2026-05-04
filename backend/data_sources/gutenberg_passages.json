@@ -54,5 +54,54 @@
     "source_author": "Agatha Christie",
     "motifs": ["red herring", "narrative omission", "small village tensions"],
     "text": "Place a loud and tempting suspect in the foreground, but let the real solution hide in a quieter contradiction or omission."
+  },
+  {
+    "id": "unreliable_narrator",
+    "source_title": "The Turn of the Screw",
+    "source_author": "Henry James",
+    "motifs": ["perception vs reality", "madness or truth", "psychological unreliability"],
+    "text": "Make the detective uncertain whether their interpretation of events is correct; let ambiguity about a suspect's guilt linger even as facts accumulate."
+  },
+  {
+    "id": "false_confession",
+    "source_title": "It Is the Buzzing of the Bees",
+    "source_author": "Golden Age Detection",
+    "motifs": ["self-accusation", "protecting another", "misplaced guilt"],
+    "text": "A suspect may confess to the crime to shield someone else; the confession is technically true but misdirects from the deeper motive."
+  },
+  {
+    "id": "hidden_witness",
+    "source_title": "The Mystery of the Yellow Room",
+    "source_author": "Gaston Leroux",
+    "motifs": ["overlooked observer", "testimony from shadows", "accidental knowledge"],
+    "text": "A minor character who was present but overlooked holds the key clue; their testimony only matters once someone asks the right question."
+  },
+  {
+    "id": "double_motive",
+    "source_title": "Lord of the Flies parallels in Mystery",
+    "source_author": "Detective Fiction Tradition",
+    "motifs": ["competing reasons to kill", "layered guilt", "unexpected alliance"],
+    "text": "Two suspects may each have killed the victim for entirely different reasons; the murder succeeds because their motives align in that moment."
+  },
+  {
+    "id": "method_as_clue",
+    "source_title": "The Judas Window",
+    "source_author": "John Dickson Carr",
+    "motifs": ["impossible method", "clever mechanism", "technical deduction"],
+    "text": "The murder method itself becomes the defining clue: something seems impossible until the detective understands how the weapon actually worked."
+  },
+  {
+    "id": "social_hierarchy_truth",
+    "source_title": "Small Town Justice",
+    "source_author": "Detective Tradition",
+    "motifs": ["class revelation", "servant knowledge", "hierarchy inversion"],
+    "text": "Lower-ranking household members often see the truth because they are invisible; their testimony carries weight precisely because no one expected them to notice."
+  },
+  {
+    "id": "temporal_paradox",
+    "source_title": "The Adventure of the Speckled Band",
+    "source_author": "Arthur Conan Doyle",
+    "motifs": ["timing impossibility", "alibi destruction", "cross-checking events"],
+    "text": "A suspect's alibi seems unbreakable until you realize they could not have been in two places at once—revealing when the murder actually occurred."
   }
 ]

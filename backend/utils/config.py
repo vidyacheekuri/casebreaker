@@ -42,10 +42,10 @@ TRIPO_REMOTE_ENABLED = os.getenv("TRIPO_REMOTE_ENABLED", "").strip().lower() in 
 }
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "auto").strip().lower()
 
-CLAUDE_MODEL = "claude-haiku-4-5-20251001"
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1-mini")
-INTERROGATION_MAX_TOKENS = 120
+INTERROGATION_MAX_TOKENS = 160
 STORY_GENERATION_MAX_TOKENS = 4000
 MAX_GENERATION_RETRIES = 5
 DAILY_SLOT_COUNT = 3
@@ -78,7 +78,7 @@ DEFAULT_SETTINGS = [
     "1920s country house outside London",
     "small-town railway hotel during heavy rain",
     "snowbound alpine retreat with wealthy guests",
-    "foggy riverside estate with a locked conservatory",
+    "foggy riverside archive with a locked records room",
     "postwar boarding school preparing for inspection",
 ]
 

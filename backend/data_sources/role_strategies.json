@@ -1,0 +1,74 @@
+[
+  {
+    "id": "unexpected_killer",
+    "strategy": "Unexpected killer",
+    "killer_archetype": ["devoted_outsider", "conflicted_professional", "loyal_servant", "shaken_witness"],
+    "innocent_archetypes": ["ambitious_operator", "elegant_mask", "controlled_insider"],
+    "red_herring": "ambitious_operator or controlling_insider appears most likely",
+    "detective_misdirection": "Detective expects obvious suspect, overlooked the quiet one",
+    "psychology": "Gentle person pushed to extremes, trusted person with secret motive"
+  },
+  {
+    "id": "obvious_with_twist",
+    "strategy": "Obvious with twist",
+    "killer_archetype": ["ambitious_operator", "elegant_mask", "reckless_gambler"],
+    "innocent_archetypes": ["devoted_outsider", "shaken_witness", "nervous_scholar"],
+    "red_herring": "Different suspect among obvious group",
+    "detective_misdirection": "Suspects the right person but for wrong reason, evidence points to wrong motive",
+    "psychology": "The 'obvious' suspect is guilty but not as detective initially thinks"
+  },
+  {
+    "id": "insider_jealousy",
+    "strategy": "Insider jealousy",
+    "killer_archetype": ["controlled_insider", "ambitious_operator", "bitter_perfectionist"],
+    "innocent_archetypes": ["devoted_outsider", "voluntary_witness", "family_connection"],
+    "red_herring": "outsider appears to have most obvious motive",
+    "detective_misdirection": "Insider's betrayal hidden beneath professional surface",
+    "psychology": "Long-simmering resentment among people who appeared cooperative"
+  },
+  {
+    "id": "collateral_damage",
+    "strategy": "Collateral damage",
+    "killer_archetype": ["reckless_gambler", "volatile_red_herring", "conflicted_professional"],
+    "innocent_archetypes": ["elegant_mask", "devoted_outsider", "controlled_insider"],
+    "red_herring": "victim appears to be primary target when actually secondary",
+    "detective_misdirection": "Killer was aiming at someone else, victim was mistaken identity or protection",
+    "psychology": "Accident or mistake escalated to murder, unexpected casualties"
+  },
+  {
+    "id": "protection_motive",
+    "strategy": "Protection motive",
+    "killer_archetype": ["devoted_outsider", "loyal_servant", "conflicted_professional"],
+    "innocent_archetypes": ["ambitious_operator", "elegant_mask", "bitter_perfectionist"],
+    "red_herring": "suspect being protected appears as red herring",
+    "detective_misdirection": "Killer seems to have no motive until hidden victim is discovered",
+    "psychology": "Killer sacrificed self to protect beloved, secret love affair or family shame"
+  },
+  {
+    "id": "equal_opportunity",
+    "strategy": "Equal opportunity killers",
+    "killer_archetype": ["ambitious_operator", "calculating_socialite", "bitter_perfectionist"],
+    "innocent_archetypes": ["devoted_outsider", "nervous_scholar", "shaken_witness"],
+    "red_herring": "multiple suspects equally credible",
+    "detective_misdirection": "Motive applies to multiple people, detective must find specific evidence",
+    "psychology": "Multiple people wanted victim dead, killer was simply first or most ruthless"
+  },
+  {
+    "id": "secondary_motive",
+    "strategy": "Secondary motive emerges",
+    "killer_archetype": ["controlled_insider", "ambitious_operator", "calculating_socialite"],
+    "innocent_archetypes": ["nervous_scholar", "devoted_outsider", "shaken_witness"],
+    "red_herring": "obvious motive present but not primary reason",
+    "detective_misdirection": "Killer admits to obvious motive but deeper one was actual driver",
+    "psychology": "Convenient excuse hides true desperation, crime of passion disguised as premeditated"
+  },
+  {
+    "id": "forced_hand",
+    "strategy": "Forced hand",
+    "killer_archetype": ["conflicted_professional", "devoted_outsider", "reckless_gambler"],
+    "innocent_archetypes": ["ambitious_operator", "elegant_mask", "bitter_perfectionist"],
+    "red_herring": "original victim or different motive appears primary",
+    "detective_misdirection": "Killer was cornered, ultimatum forced their hand at specific moment",
+    "psychology": "Victim's action that day triggered decades of buried resentment"
+  }
+]

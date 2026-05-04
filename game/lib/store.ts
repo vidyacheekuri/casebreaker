@@ -12,7 +12,9 @@ import type {
   DailyKeywordDto,
   DailySlotDto,
   EvidenceDto,
+  InvestigationRoomDto,
 } from "@/lib/backend-types";
+import { EVIDENCE_IMAGE_CACHE_KEY_PREFIX } from "@/lib/evidence-images";
 
 export type Screen =
   | "intro"
@@ -28,6 +30,9 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   tone?: string;
+  timestamp?: string;
+  /** Stress increase from this suspect reply (interrogation). */
+  stressDelta?: number;
 }
 
 export interface InvestigationRoom {
@@ -35,11 +40,11 @@ export interface InvestigationRoom {
   name: string;
   description: string;
   evidence_ids: string[];
+  clue_count: number;
 }
 
 const MAX_KEYWORD_SELECTION = 4;
 const PERSISTED_GAME_STATE_KEY = "casebreaker-game-state";
-const EVIDENCE_IMAGE_STORAGE_PREFIX = "casebreaker:evidence-image";
 
 function toRoomId(location: string): string {
   return location
@@ -65,7 +70,20 @@ function toTitleCase(text: string): string {
     .join(" ");
 }
 
-export function buildRoomsFromEvidence(evidence: EvidenceDto[]): InvestigationRoom[] {
+export function buildRoomsFromEvidence(
+  evidence: EvidenceDto[],
+  backendRooms?: InvestigationRoomDto[]
+): InvestigationRoom[] {
+  if (backendRooms && backendRooms.length > 0) {
+    return backendRooms.map((room) => ({
+      room_id: room.room_id,
+      name: room.name || toTitleCase(room.room_id),
+      description: room.description || `Search clues from ${toTitleCase(room.room_id)}.`,
+      evidence_ids: room.evidence_ids,
+      clue_count: room.clue_count ?? room.evidence_ids.length,
+    }));
+  }
+
   const grouped = new Map<string, InvestigationRoom>();
 
   for (const clue of evidence) {
@@ -76,12 +94,14 @@ export function buildRoomsFromEvidence(evidence: EvidenceDto[]): InvestigationRo
         name: toTitleCase(clue.location),
         description: `Search clues from ${toTitleCase(clue.location)}.`,
         evidence_ids: [],
+        clue_count: 0,
       });
     }
 
     const room = grouped.get(roomId);
     if (room && !room.evidence_ids.includes(clue.evidence_id)) {
       room.evidence_ids.push(clue.evidence_id);
+      room.clue_count = room.evidence_ids.length;
     }
   }
 
@@ -120,7 +140,7 @@ function buildHistoryMap(slot: DailySlotDto | null): Record<string, Message[]> {
 
 function hydrateHistoryFromTranscript(
   slot: DailySlotDto,
-  transcript: Array<{ character_id: string; speaker: string; text: string; tone: string | null }>
+  transcript: Array<{ character_id: string; speaker: string; text: string; tone: string | null; timestamp?: string }>
 ): Record<string, Message[]> {
   const seeded = buildHistoryMap(slot);
   for (const turn of transcript) {
@@ -129,6 +149,7 @@ function hydrateHistoryFromTranscript(
       role,
       content: turn.text,
       tone: turn.tone ?? undefined,
+      timestamp: "timestamp" in turn ? String(turn.timestamp) : undefined,
     };
     seeded[turn.character_id] = [...(seeded[turn.character_id] ?? []), nextMessage];
   }
@@ -145,7 +166,7 @@ function errorMessage(error: unknown): string {
 function updateSlotEvidenceImage(
   slot: DailySlotDto,
   evidenceId: string,
-  patch: Partial<Pick<EvidenceDto, "image_url" | "image_prompt" | "image_status">>
+  patch: Partial<Pick<EvidenceDto, "image_url" | "image_prompt" | "image_status" | "image_version">>
 ): DailySlotDto {
   return {
     ...slot,
@@ -171,6 +192,7 @@ function stripPersistedEvidenceImages(slot: DailySlotDto | null): DailySlotDto |
       ...item,
       image_url: null,
       image_status: item.image_status === "ready" ? "idle" : item.image_status,
+      image_version: null,
     })),
   };
 }
@@ -181,6 +203,56 @@ function stripPersistedSlotImages(slots: DailySlotDto[]): DailySlotDto[] {
     .filter((slot): slot is DailySlotDto => Boolean(slot));
 }
 
+async function startSessionForSlot(
+  slotId: string,
+  slots: DailySlotDto[],
+  keywords: DailyKeywordDto[],
+  set: (partial: Partial<GameState>) => void
+): Promise<boolean> {
+  const session = await startSession({ slot_id: slotId });
+  const sessionSnapshot = await getSessionState(session.session_id);
+  let nextSlots = slots;
+  let nextKeywords = keywords;
+  let activeSlot = nextSlots.find((slot) => slot.slot_id === slotId) ?? null;
+
+  if (!activeSlot) {
+    const refreshed = await getDailySlots();
+    nextSlots = refreshed.slots;
+    nextKeywords = refreshed.daily_keywords;
+    activeSlot = nextSlots.find((slot) => slot.slot_id === slotId) ?? null;
+  }
+
+  if (!activeSlot) {
+    throw new Error("The selected story is no longer available. Please try again.");
+  }
+
+  set({
+    screen: "cinematic",
+    gameStartTime: Date.now(),
+    startingSession: false,
+    startError: null,
+    hiddenSlots: nextSlots,
+    dailyKeywords: nextKeywords,
+    matchedSlotId: slotId,
+    sessionId: session.session_id,
+    activeSlot,
+    rooms: buildRoomsFromEvidence(activeSlot.evidence, activeSlot.rooms),
+    selectedRoomId: null,
+    selectedSuspectId: null,
+    searchedRooms: [],
+    discoveredEvidence: sessionSnapshot.state.evidence_examined,
+    selectedEvidenceIds: [],
+    reviewedEvidenceIds: sessionSnapshot.state.evidence_examined,
+    accusationEvidenceIds: [],
+    suspectStress: buildStressMap(activeSlot),
+    interrogationHistories: hydrateHistoryFromTranscript(activeSlot, sessionSnapshot.transcript),
+    latestInstinctQuote: null,
+    accusation: null,
+  });
+
+  return true;
+}
+
 function pruneLargeLocalStorageEntries(): void {
   if (typeof window === "undefined") {
     return;
@@ -189,7 +261,7 @@ function pruneLargeLocalStorageEntries(): void {
   const keysToRemove: string[] = [];
   for (let index = 0; index < window.localStorage.length; index += 1) {
     const key = window.localStorage.key(index);
-    if (key?.startsWith(EVIDENCE_IMAGE_STORAGE_PREFIX)) {
+    if (key?.startsWith(EVIDENCE_IMAGE_CACHE_KEY_PREFIX)) {
       keysToRemove.push(key);
     }
   }
@@ -252,11 +324,16 @@ interface GameState {
   latestInstinctQuote: string | null;
   accusation: AccuseResponse | null;
 
+  /** 0–1 smoothed ambient mix from AudioContext gains (rain, heartbeat, clock) for visual sync. */
+  ambientAudioIntensity: number;
+  setAmbientAudioIntensity: (value: number) => void;
+
   goTo: (screen: Screen) => void;
   initializeLanding: () => Promise<void>;
   toggleKeywordSelection: (keywordId: string) => void;
   clearKeywordSelection: () => void;
   startSessionFromKeywords: () => Promise<boolean>;
+  startRandomSession: () => Promise<boolean>;
 
   selectRoom: (roomId: string) => void;
   searchRoom: (roomId: string, evidenceIds: string[]) => void;
@@ -267,7 +344,7 @@ interface GameState {
   setEvidenceForAccusation: (evidenceId: string, value: boolean) => void;
   updateEvidenceImage: (
     evidenceId: string,
-    patch: Partial<Pick<EvidenceDto, "image_url" | "image_prompt" | "image_status">>
+    patch: Partial<Pick<EvidenceDto, "image_url" | "image_prompt" | "image_status" | "image_version">>
   ) => void;
   increaseStress: (characterId: string, amount: number) => void;
   addMessages: (characterId: string, msgs: Message[]) => void;
@@ -310,6 +387,12 @@ export const useGameStore = create<GameState>()(
 
   latestInstinctQuote: null,
   accusation: null,
+
+  ambientAudioIntensity: 0,
+  setAmbientAudioIntensity: (value) =>
+    set({
+      ambientAudioIntensity: Math.max(0, Math.min(1, value)),
+    }),
 
   goTo: (screen) => {
     set((state) => ({
@@ -376,60 +459,32 @@ export const useGameStore = create<GameState>()(
       const match = await matchDailySlot({
         selected_keyword_ids: state.selectedKeywordIds,
       });
-      const session = await startSession({ slot_id: match.matched_slot_id });
-      const sessionSnapshot = await getSessionState(session.session_id);
-
-      let slots = state.hiddenSlots;
-      let keywords = state.dailyKeywords;
-      let activeSlot = slots.find((slot) => slot.slot_id === match.matched_slot_id) ?? null;
-
-      if (!activeSlot) {
-        const refreshed = await getDailySlots();
-        slots = refreshed.slots;
-        keywords = refreshed.daily_keywords;
-        activeSlot = slots.find((slot) => slot.slot_id === match.matched_slot_id) ?? null;
-      }
-
-      if (!activeSlot) {
-        throw new Error("The matched story is no longer available. Please try again.");
-      }
-
-      set({
-        screen: "cinematic",
-        gameStartTime: Date.now(),
-        startingSession: false,
-        startError: null,
-
-        hiddenSlots: slots,
-        dailyKeywords: keywords,
-
-        matchedSlotId: match.matched_slot_id,
-        sessionId: session.session_id,
-        activeSlot,
-
-        rooms: buildRoomsFromEvidence(activeSlot.evidence),
-        selectedRoomId: null,
-        selectedSuspectId: null,
-
-        searchedRooms: [],
-        discoveredEvidence: sessionSnapshot.state.evidence_examined,
-        selectedEvidenceIds: [],
-        reviewedEvidenceIds: sessionSnapshot.state.evidence_examined,
-        accusationEvidenceIds: [],
-
-        suspectStress: buildStressMap(activeSlot),
-        interrogationHistories: hydrateHistoryFromTranscript(activeSlot, sessionSnapshot.transcript),
-
-        latestInstinctQuote: null,
-        accusation: null,
-      });
-
-      return true;
+      return await startSessionForSlot(match.matched_slot_id, state.hiddenSlots, state.dailyKeywords, set);
     } catch (error) {
       set({
         startingSession: false,
         startError: errorMessage(error),
       });
+      return false;
+    }
+  },
+
+  startRandomSession: async () => {
+    set({ startingSession: true, startError: null, landingError: null });
+    try {
+      let { hiddenSlots, dailyKeywords } = get();
+      if (hiddenSlots.length === 0) {
+        const refreshed = await getDailySlots();
+        hiddenSlots = refreshed.slots;
+        dailyKeywords = refreshed.daily_keywords;
+      }
+      if (hiddenSlots.length === 0) {
+        throw new Error("No mysteries are available yet. Generate today's slots first.");
+      }
+      const randomSlot = hiddenSlots[Math.floor(Math.random() * hiddenSlots.length)];
+      return await startSessionForSlot(randomSlot.slot_id, hiddenSlots, dailyKeywords, set);
+    } catch (error) {
+      set({ startingSession: false, startError: errorMessage(error) });
       return false;
     }
   },
@@ -510,10 +565,14 @@ export const useGameStore = create<GameState>()(
   },
 
   addMessages: (characterId, msgs) => {
+    const timestampedMessages = msgs.map((message) => ({
+      ...message,
+      timestamp: message.timestamp ?? new Date().toISOString(),
+    }));
     set((state) => ({
       interrogationHistories: {
         ...state.interrogationHistories,
-        [characterId]: [...(state.interrogationHistories[characterId] ?? []), ...msgs],
+        [characterId]: [...(state.interrogationHistories[characterId] ?? []), ...timestampedMessages],
       },
     }));
   },
@@ -567,6 +626,8 @@ export const useGameStore = create<GameState>()(
 
       latestInstinctQuote: null,
       accusation: null,
+
+      ambientAudioIntensity: 0,
 
       dailyKeywords: state.dailyKeywords,
       hiddenSlots: state.hiddenSlots,

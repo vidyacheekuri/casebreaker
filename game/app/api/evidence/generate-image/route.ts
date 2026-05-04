@@ -4,15 +4,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const responseCache = new Map<
-  string,
-  {
-    imageUrl: string;
-    prompt: string;
-    model: string;
-    generatedAt: number;
-  }
->();
+const IMAGE_PIPELINE_VERSION = "2.0";
+
+type CacheEntry = {
+  imageUrl: string;
+  prompt: string;
+  model: string;
+  generatedAt: number;
+  /** Set for all entries in this route; v2 pipeline skips regeneration when present. */
+  version: string;
+};
+
+const responseCache = new Map<string, CacheEntry>();
+
+function entryVersion(entry: CacheEntry): string {
+  return entry.version ?? IMAGE_PIPELINE_VERSION;
+}
 
 function readEnvFileValue(filePath: string, key: string): string | undefined {
   try {
@@ -54,6 +61,33 @@ function getServerEnvValue(key: string): string | undefined {
   return process.env[key]?.trim() || readLocalEnvValue(key);
 }
 
+/** Resolve cached v2 image without starting generation. */
+export async function GET(request: NextRequest) {
+  const caseId = request.nextUrl.searchParams.get("caseId")?.trim();
+  const evidenceId = request.nextUrl.searchParams.get("evidenceId")?.trim();
+
+  if (!caseId || !evidenceId) {
+    return NextResponse.json({ error: "caseId and evidenceId are required" }, { status: 400 });
+  }
+
+  const cacheKey = `${caseId}:${evidenceId}`;
+  const cached = responseCache.get(cacheKey);
+  if (!cached) {
+    return NextResponse.json({ error: "not found" }, { status: 404 });
+  }
+
+  const version = entryVersion(cached);
+  if (version !== IMAGE_PIPELINE_VERSION) {
+    return NextResponse.json({ error: "not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    url: cached.imageUrl,
+    version,
+    model: cached.model,
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { caseId, evidenceId, prompt } = (await request.json()) as {
@@ -71,13 +105,14 @@ export async function POST(request: NextRequest) {
 
     const cacheKey = `${caseId}:${evidenceId}`;
     const cached = responseCache.get(cacheKey);
-    if (cached) {
-      console.log("[evidence-images/api] cache hit", { caseId, evidenceId });
+    if (cached && entryVersion(cached) === IMAGE_PIPELINE_VERSION) {
+      console.log("[evidence-images/api] cache hit (v2)", { caseId, evidenceId });
       return NextResponse.json({
         imageUrl: cached.imageUrl,
         provider: "openai",
         model: cached.model,
         cached: true,
+        version: IMAGE_PIPELINE_VERSION,
       });
     }
 
@@ -153,6 +188,7 @@ export async function POST(request: NextRequest) {
       prompt,
       model,
       generatedAt: Date.now(),
+      version: IMAGE_PIPELINE_VERSION,
     });
 
     console.log("[evidence-images/api] generated", {
@@ -166,6 +202,7 @@ export async function POST(request: NextRequest) {
       provider: "openai",
       model,
       cached: false,
+      version: IMAGE_PIPELINE_VERSION,
     });
   } catch (error) {
     console.error("[evidence-images/api] failed", error);

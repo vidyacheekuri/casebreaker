@@ -125,17 +125,17 @@ def detect_same_day_similarity(world: WorldState, accepted_worlds: list[WorldSta
             return SameDayNoveltyResult(True, "suspect name repeated")
 
         previous_story_text = _story_text(previous)
-        if _jaccard(_token_set(story_text), _token_set(previous_story_text)) >= 0.22:
+        if _jaccard(_token_set(story_text), _token_set(previous_story_text)) >= 0.38:
             return SameDayNoveltyResult(True, "story premise too similar")
 
         previous_crime_text = _crime_text(previous)
-        if _jaccard(_token_set(crime_text), _token_set(previous_crime_text)) >= 0.24:
+        if _jaccard(_token_set(crime_text), _token_set(previous_crime_text)) >= 0.34:
             return SameDayNoveltyResult(True, "crime method or clue chain too similar")
 
         previous_appearance_texts = [_token_set(character.appearance) for character in previous.characters]
         for appearance_tokens in appearance_texts:
             for previous_tokens in previous_appearance_texts:
-                if _jaccard(appearance_tokens, previous_tokens) >= 0.34:
+                if _jaccard(appearance_tokens, previous_tokens) >= 0.48:
                     return SameDayNoveltyResult(True, "suspect appearance too similar")
 
     return SameDayNoveltyResult(False)
@@ -147,6 +147,10 @@ def _story_text(world: WorldState) -> str:
         [
             world.title,
             world.summary,
+            world.backstory,
+            world.crime_scene_detail,
+            world.stakes,
+            world.timeline_context,
             world.setting,
             world.motive,
             recipe.subgenre if recipe else "",
@@ -197,6 +201,31 @@ def _token_set(text: str) -> set[str]:
         "person",
         "suspect",
         "victim",
+        "murder",
+        "mystery",
+        "story",
+        "case",
+        "slot",
+        "pressure",
+        "private",
+        "public",
+        "house",
+        "household",
+        "family",
+        "alibi",
+        "evidence",
+        "clue",
+        "killer",
+        "truth",
+        "known",
+        "found",
+        "dead",
+        "death",
+        "fatal",
+        "relationship",
+        "secret",
+        "morning",
+        "evening",
     }
     return {
         token

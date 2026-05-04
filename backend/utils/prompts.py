@@ -15,10 +15,10 @@ Hard requirements:
 - Never reuse a victim name, suspect name, death method, signature clue, motive setup, room pattern, or visual character design that would fit another slot from the same day.
 - Make every suspect appearance specific and distinct: different age impression, hairstyle, clothing silhouette, posture, accessories, and visible emotional tell. Avoid generic repeated phrases across suspects or slots.
 - Use slot-specific creative lanes: slot 1 should feel like a social/reputation mystery, slot 2 like a professional or money-pressure mystery, and slot 3 like an intimate household/private-secret mystery. Still obey the supplied source data.
-- Keep descriptions to 1-2 sentences each — concise but vivid.
-- Write everything in clear, modern, normal English.
-- Do NOT use archaic, Victorian-novel, or overly literary phrasing.
-- The mystery may feel classic in structure, but the wording should read like a modern game, not an old novel.
+- Keep descriptions to 1-2 sentences each — concise but vivid, except the dedicated story fields below.
+- Write most fields in clear, modern, normal English suitable for quick UI scanning.
+- For "backstory", "crime_scene_detail", "stakes", and "timeline_context" ONLY: write rich, atmospheric prose in the manner of a late-Victorian or golden-age detective story (lived-in detail, moral weight, weather and rooms, but no purple every word). These four should feel like a penny dreadful or country-house mystery narrator—not slang, not an old novel pastiche of "thee/thou", but certainly not clinical police blotter tone.
+- Do NOT use archaic, Victorian-novel clutter in suspect dialogue fields, evidence labels, or timelines; keep those playable and plain.
 - You MUST ground the story in the supplied source data:
   1. FBI-style motive/relationship priors define the motive family, relationship dynamic, and clue style.
   2. Persona archetypes define the three suspects' roles, speech tendencies, visual cues, and secret tendencies.
@@ -35,9 +35,13 @@ Return this exact JSON shape (no wrapper key):
 {
   "title": "string",
   "summary": "string (1 sentence)",
+  "backstory": "string (2-3 sentences: victim's life, temperament, and grudges—Victorian-tinged narrative prose)",
+  "crime_scene_detail": "string (1-2 sentences: where the body was found, lighting, stillness, sensory detail—Victorian-tinged)",
+  "stakes": "string (1-2 sentences: why the murder matters—inheritance, blackmail, ruined names—Victorian-tinged)",
+  "timeline_context": "string (2-4 sentences: narrative of the evening's sequence, when tension rose, who was where—Victorian-tinged; do not paste bullet points)",
   "mood": "string",
   "setting": "string",
-  "victim": {"name": "string", "age": 0, "occupation": "string", "cause_of_death": "string"},
+  "victim": {"name": "string", "age": 0, "occupation": "string", "cause_of_death": "string", "time_of_death": "string"},
   "killer_id": "suspect_1",
   "motive": "string (1-2 sentences)",
   "timeline": [{"time": "string", "event": "string (1 sentence)", "witnessed_by": ["suspect_1"]}],
@@ -46,6 +50,7 @@ Return this exact JSON shape (no wrapper key):
       "character_id": "suspect_1",
       "name": "string", "age": 0, "occupation": "string",
       "relationship_to_victim": "string",
+      "motive": "string (1 sentence: what this suspect stood to gain or feared losing)",
       "personality": "string (1 sentence)",
       "alibi": "string (1 sentence)",
       "alibi_true": false,
@@ -100,13 +105,24 @@ Same-day uniqueness contract:
 - The three slots for this date are shown side by side. Slot {slot_index} must not feel like a reskin of either other slot.
 - Do not share victim names, suspect names, how the crime happened, major clue concepts, suspect archetype combinations, or suspect appearance language with another slot from the same day.
 - If you are tempted to use a familiar manor poisoning/inheritance setup, replace it with a different victim role, pressure source, method, evidence pattern, and visual cast.
+- Garden or conservatory material is allowed when it fits the slot lane, but it must not become the default pattern for all three slots.
+
+Cross-day diversity mandate:
+{avoided_motives_text}
+Please ensure this story's motive family, suspect archetypes, and narrative approach feel fresh compared to recent days.
 
 Setting: {setting}
 Mood: {mood}
 Required motive family: {motive_family}
 
+DIVERSITY REQUIREMENTS (use these to ensure story feels fresh and specific):
+{diverse_context}
+
 Selected source choices:
 {selected_context}
+
+Slot creative lane:
+{creative_lane}
 
 Case recipe to follow exactly:
 {case_recipe}
@@ -129,7 +145,7 @@ Copy each persona's speech_style into the matching suspect and make the actual d
 Set gender_presentation explicitly for each suspect based on their name, role, and relationship, and make the appearance match it.
 Let the literary references influence atmosphere, clue logic, and the kind of red herring you introduce.
 Return the provided case_recipe and generation_sources in the JSON output.
-Keep all prose in plain modern English that a player can read quickly.
+Keep suspect dialogue, evidence, and timeline events in plain modern English; give backstory, crime_scene_detail, stakes, and timeline_context Victorian-tinged narrative richness as specified in the system prompt.
 Return only the JSON object. No extra text."""
 
 
@@ -233,6 +249,9 @@ Preserve the tone and broad concept, but fix contradictions in:
 - witness references
 - suspect count and evidence count
 - plain modern English wording if any field sounds archaic or overly literary
+
+Preserve and return these narrative fields if present (do not blank them): backstory, crime_scene_detail, stakes, timeline_context.
+You may lightly edit them only for consistency with the victim name, setting, or timeline.
 """
 
 CONSISTENCY_REPAIR_USER_PROMPT = """Repair this mystery so it satisfies the CaseBreaker rules:
@@ -267,7 +286,9 @@ World facts you have access to (use only what your character would plausibly kno
 {world_context}
 
 Hard rules:
-- Respond in 1-4 short sentences. Plain modern English, not archaic.
+- Respond in 1-2 short sentences only.
+- Use simple everyday English. No advanced words, no fancy phrasing, no long explanations.
+- Keep the reply under 35 words unless the detective asks for a very specific detail.
 - Never list facts as bullet points. Speak naturally.
 - Let the speech style shape rhythm and word choice without becoming a caricature.
 - Show the emotional tell subtly when the detective presses on your wound, lie, alibi, or relationships.
@@ -291,7 +312,7 @@ INTERROGATION_USER_PROMPT = """Recent interrogation so far (oldest first):
 
 Detective asks: {message}
 
-Reply in-character as {name}. Return only the JSON object."""
+Reply in-character as {name}. Keep it short and simple. Return only the JSON object."""
 
 
 EVALUATOR_SYSTEM_PROMPT = """You are the Verdict narrator for CaseBreaker AI.

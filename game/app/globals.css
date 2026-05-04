@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "./tailwind.config.ts";
 
 :root {
   --background: #070E1A;
@@ -19,4 +20,168 @@ body {
 
 @keyframes blink { 50% { opacity: 0; } }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes bounce { from { transform: scaleY(0.5); } to { transform: scaleY(1.5); } }
+@keyframes suspect-pulse {
+  0% { box-shadow: 0 0 0 rgba(212,168,67,0); }
+  35% { box-shadow: 0 0 0 2px rgba(212,168,67,.55), 0 0 34px rgba(212,168,67,.34); }
+  100% { box-shadow: 0 0 0 rgba(212,168,67,0); }
+}
+@keyframes suspect-shake {
+  0%, 100% { translate: 0 0; }
+  25% { translate: 1px 0; }
+  50% { translate: -1px 0; }
+  75% { translate: 1px 0; }
+}
+
+.suspect-card {
+  border-radius: 4px;
+  perspective: 900px;
+}
+
+.suspect-card-pulse {
+  animation: suspect-pulse 900ms ease-out;
+}
+
+.suspect-card-shake:hover {
+  animation: suspect-shake 180ms ease-in-out infinite;
+}
+
+.suspect-typewriter {
+  border-right: 1px solid rgba(212,168,67,.75);
+  transition: width 900ms steps(18), border-color 200ms ease;
+}
+
+.suspect-card:not(:hover) .suspect-typewriter {
+  border-color: transparent;
+}
+
+.corkboard {
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(94, 52, 27, .32) 0 1px, transparent 1px 7px),
+    radial-gradient(circle at 70% 62%, rgba(255, 226, 170, .12) 0 1px, transparent 1px 9px),
+    linear-gradient(45deg, rgba(72, 39, 20, .28) 25%, transparent 25% 75%, rgba(72, 39, 20, .22) 75%),
+    linear-gradient(135deg, #9A6137, #71411F 42%, #8A552F);
+  background-size: 21px 21px, 27px 27px, 16px 16px, 100% 100%;
+  box-shadow: inset 0 0 50px rgba(35, 17, 8, .52), 0 18px 50px rgba(0, 0, 0, .32);
+}
+
+.corkboard::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+  border: 1px solid rgba(64, 35, 18, .45);
+  box-shadow: inset 0 0 20px rgba(255, 230, 180, .05);
+}
+
+.corkboard-card {
+  perspective: 900px;
+  transform-origin: 50% 10%;
+}
+
+.corkboard-card:hover .pushpin {
+  animation: pin-wiggle 260ms ease-in-out infinite;
+}
+
+.polaroid-face {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.polaroid-face img {
+  filter: sepia(.16) contrast(.96) saturate(.9);
+}
+
+.polaroid-back {
+  transform: rotateY(180deg);
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+@keyframes pin-wiggle {
+  0%, 100% { rotate: 0deg; }
+  35% { rotate: -8deg; }
+  70% { rotate: 7deg; }
+}
+
+@keyframes stress-ui-shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(.6px, 0, 0); }
+  50% { transform: translate3d(-.8px, .4px, 0); }
+  75% { transform: translate3d(.5px, -.3px, 0); }
+}
+
+.stress-ui-shake {
+  animation: stress-ui-shake 420ms ease-in-out infinite;
+}
+
+.cinematic-title-shadow {
+  font-family: Georgia, serif;
+  text-shadow:
+    0 0 10px rgba(212, 168, 67, .16),
+    0 4px 18px rgba(0, 0, 0, .9),
+    2px 2px 0 rgba(0, 0, 0, .75);
+}
+
+.message-tone-hostile-edge {
+  text-shadow: 0 0 1px rgba(248, 113, 113, 0.45), 0 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+@keyframes atmosphere-fog-drift-a {
+  0%, 100% { transform: translateX(-6%) translateY(0); opacity: 0.32; }
+  50% { transform: translateX(10%) translateY(-3%); opacity: 0.48; }
+}
+
+@keyframes atmosphere-fog-drift-b {
+  0%, 100% { transform: translateX(8%) translateY(2%); opacity: 0.42; }
+  50% { transform: translateX(-12%) translateY(-2%); opacity: 0.58; }
+}
+
+.atmosphere-fog-a {
+  animation: atmosphere-fog-drift-a 32s ease-in-out infinite;
+}
+
+.atmosphere-fog-b {
+  animation: atmosphere-fog-drift-b 46s ease-in-out infinite;
+}
+
+@keyframes atmosphere-dust-float {
+  0% { transform: translate3d(0, 6px, 0); opacity: 0.12; }
+  35% { opacity: 0.5; }
+  100% { transform: translate3d(8px, -32vh, 0); opacity: 0.1; }
+}
+
+.atmosphere-dust {
+  animation-name: atmosphere-dust-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes atmosphere-shimmer {
+  0%, 100% { transform: scale(0.85); }
+  50% { transform: scale(1.2); }
+}
+
+.atmosphere-shimmer {
+  animation: atmosphere-shimmer 3.8s ease-in-out infinite;
+}
+
+.notebook-handwriting {
+  font-family: var(--font-notebook-hand), "Segoe Print", "Bradley Hand", cursive;
+}
+
+.notebook-leather {
+  background: linear-gradient(118deg, #2c1e18 0%, #18100c 36%, #38251c 72%, #1f1410 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 210, 170, 0.07),
+    inset -2px 0 12px rgba(0, 0, 0, 0.35);
+}
+
+.notebook-paper {
+  background-color: #121820;
+  background-image:
+    repeating-linear-gradient(transparent, transparent 23px, rgba(255, 255, 255, 0.035) 24px),
+    radial-gradient(ellipse 85% 40% at 50% -15%, rgba(212, 168, 67, 0.07), transparent);
+}

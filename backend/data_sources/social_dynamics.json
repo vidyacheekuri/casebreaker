@@ -1,0 +1,82 @@
+[
+  {
+    "id": "patron_client",
+    "dynamic": "Patron-Client relationship",
+    "power_imbalance": "Extreme, patron holds all power",
+    "motive_types": ["fear of losing patronage", "resentment of dependence", "theft of patron's secrets", "revenge for mistreatment"],
+    "vulnerability": "Client is invisible yet essential, patron assumes client's permanent loyalty",
+    "typical_suspects": ["servant with patron secret", "artist dependent on patron's support", "young person raised by patron"],
+    "evidence_pattern": "Client's perspective hidden until interrogation, patron's version initially accepted",
+    "relationship_tension": "Deep resentment masked by gratitude, unspoken expectations on both sides"
+  },
+  {
+    "id": "professional_rivals",
+    "dynamic": "Professional rivals",
+    "power_imbalance": "Equal but competing",
+    "motive_types": ["career destruction threat", "stolen credit or ideas", "business betrayal", "public humiliation"],
+    "vulnerability": "Both have equal stakes, neither clearly innocent",
+    "typical_suspects": ["business partner", "professional competitor", "academic rival"],
+    "evidence_pattern": "Both have motive and opportunity, evidence points to both equally",
+    "relationship_tension": "Polite public facade hides bitter rivalry, decades of slights accumulate"
+  },
+  {
+    "id": "family_by_choice",
+    "dynamic": "Family of choice (found family)",
+    "power_imbalance": "Varies, but bonds are voluntary not biological",
+    "motive_types": ["betrayal of chosen family", "threat to chosen family's survival", "romantic rival for affection"],
+    "vulnerability": "Bonds are deeper precisely because chosen, betrayal feels worse",
+    "typical_suspects": ["longtime housemate", "adopted child", "spiritual family member"],
+    "evidence_pattern": "Genuine love complicated by real grievance, not simple family obligation",
+    "relationship_tension": "Fiercely protective but capable of deep disappointment in each other"
+  },
+  {
+    "id": "community_outsider",
+    "dynamic": "Community insider vs. outsider",
+    "power_imbalance": "Outsider vulnerable to community judgment",
+    "motive_types": ["protection of community from outsider", "revenge for exclusion", "hiding of outsider status"],
+    "vulnerability": "Outsider must maintain facade to belong, insider has community support",
+    "typical_suspects": ["newcomer", "person of different religion/background", "moral outcast"],
+    "evidence_pattern": "Community protects its own, outsider's truth harder to prove",
+    "relationship_tension": "Outsider yearns to belong while resenting exclusion, community fears change"
+  },
+  {
+    "id": "employer_employee",
+    "dynamic": "Employer-employee",
+    "power_imbalance": "Employer holds economic power",
+    "motive_types": ["wrongful dismissal", "wage theft", "exploitation", "sexual harassment"],
+    "vulnerability": "Employee's livelihood depends on employer, employer assumes obedience",
+    "typical_suspects": ["longtime servant", "business manager", "trusted aide"],
+    "evidence_pattern": "Employee's testimony against employer's reputation, power dynamics complicate truth",
+    "relationship_tension": "Professional courtesy masks real grievances, formal boundaries hide human conflict"
+  },
+  {
+    "id": "romantic_triangle",
+    "dynamic": "Romantic triangle or love conflict",
+    "power_imbalance": "Emotional rather than economic, all parties suffer",
+    "motive_types": ["jealous rage", "protection of beloved", "revenge for emotional harm", "elimination of rival"],
+    "vulnerability": "All three emotionally compromised, judgment clouded",
+    "typical_suspects": ["new romantic interest", "spurned lover", "beloved's spouse"],
+    "evidence_pattern": "Passion and jealousy evident in all parties, emotional truth confuses factual truth",
+    "relationship_tension": "Desire and resentment intertwined, declarations of love mask declarations of hate"
+  },
+  {
+    "id": "secret_alliance",
+    "dynamic": "Secret alliance or conspiracy",
+    "power_imbalance": "Allies equal but against outsider",
+    "motive_types": ["protection of shared secret", "joint financial gain", "revenge for shared grievance"],
+    "vulnerability": "Alliance only holds if secret remains hidden, single betrayal ruins both",
+    "typical_suspects": ["two suspects with seemingly separate motives", "hidden partnership"],
+    "evidence_pattern": "Appearance of independent motives masks coordinated action",
+    "relationship_tension": "Deep loyalty with underlying fear of betrayal, trust maintained by shared guilt"
+  },
+  {
+    "id": "intergenerational",
+    "dynamic": "Intergenerational conflict",
+    "power_imbalance": "Older has experience/authority, younger has vitality/desperation",
+    "motive_types": ["inheritance dispute", "generational ideology clash", "suppression of younger's dreams"],
+    "vulnerability": "Both have valid grievances from different perspectives",
+    "typical_suspects": ["parent and adult child", "mentor and protégé", "elder and ambitious heir"],
+    "evidence_pattern": "Both sides have legitimate complaints, victim caught in generational war",
+    "relationship_tension": "Love complicated by resentment, respect complicated by rebellion"
+  }
+]

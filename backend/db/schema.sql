@@ -89,3 +89,17 @@ CREATE TABLE IF NOT EXISTS sessions (
     started_at TEXT NOT NULL,
     state_json TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS generation_history (
+    history_id TEXT PRIMARY KEY,
+    case_date TEXT NOT NULL,
+    slot_index INTEGER NOT NULL,
+    fbi_id TEXT NOT NULL,
+    persona_ids_json TEXT NOT NULL,
+    literary_ids_json TEXT NOT NULL,
+    generated_at TEXT NOT NULL,
+    UNIQUE(case_date, slot_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_generation_history_date
+ON generation_history(case_date);

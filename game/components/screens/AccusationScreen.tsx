@@ -61,22 +61,22 @@ export default function AccusationScreen() {
       <div className="flex items-center justify-between">
         <button
           onClick={() => goTo("manor")}
-          className="text-[10px] uppercase tracking-wider text-[#445566] transition-colors hover:text-[#C8D0DC]"
+          className="text-label uppercase tracking-wider text-[#445566] transition-colors hover:text-[#C8D0DC]"
         >
           ← Back
         </button>
-        <div className="text-[10px] uppercase tracking-[4px] text-[#D4A843]">Final Accusation</div>
+        <div className="text-h1 uppercase tracking-[4px] text-[#D4A843]">Final Accusation</div>
         <div className="w-16" />
       </div>
 
-      <div className="text-center text-sm italic leading-relaxed text-[#667788]" style={{ fontFamily: "Georgia, serif" }}>
+      <div className="text-center text-body italic leading-relaxed text-[#667788]" style={{ fontFamily: "Georgia, serif" }}>
         You have gathered enough clues. Name the killer and explain your reasoning.
       </div>
 
       <div className="border border-[#1E2A38] p-4" style={{ background: "rgba(255,255,255,.01)" }}>
-        <div className="mb-2 text-[9px] uppercase tracking-[3px] text-[#334455]">Evidence In Hand</div>
+        <div className="mb-2 text-detail uppercase tracking-[3px] text-[#334455]">Evidence In Hand</div>
         {discoveredItems.length === 0 ? (
-          <div className="text-xs italic text-[#334455]">No evidence collected yet.</div>
+          <div className="text-caption italic text-[#334455]">No evidence collected yet.</div>
         ) : (
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {discoveredItems.map((item) => (
@@ -91,10 +91,10 @@ export default function AccusationScreen() {
               >
                 <EvidenceImage evidence={item} size="compact" />
                 <div className="min-w-0">
-                  <div className="truncate text-[10px] font-semibold text-[#D4A843]">
+                  <div className="truncate text-label font-semibold text-[#D4A843]">
                     {item.name}
                   </div>
-                  <div className="mt-0.5 truncate text-[9px] text-[#667788]">
+                  <div className="mt-0.5 truncate text-detail text-[#667788]">
                     {item.location}
                   </div>
                 </div>
@@ -105,7 +105,7 @@ export default function AccusationScreen() {
       </div>
 
       <div>
-        <div className="mb-3 text-[9px] uppercase tracking-[3px] text-[#334455]">Who is the killer?</div>
+        <div className="mb-3 text-detail uppercase tracking-[3px] text-[#334455]">Who is the killer?</div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {activeSlot.suspects.map((suspect) => {
             const selected = accusedId === suspect.character_id;
@@ -121,11 +121,11 @@ export default function AccusationScreen() {
                 }}
                 whileHover={{ borderColor: "rgba(212,168,67,.32)" }}
               >
-                <div className="text-xs font-semibold text-[#C8D0DC]">{suspect.name}</div>
-                <div className="mt-0.5 text-[9px] text-[#445566]">{suspect.occupation}</div>
-                <div className="mt-1 text-[9px] italic text-[#334455]">{suspect.relationship_to_victim}</div>
+                <div className="text-h2 font-semibold text-[#C8D0DC]">{suspect.name}</div>
+                <div className="mt-0.5 text-detail text-[#445566]">{suspect.occupation}</div>
+                <div className="mt-1 text-detail italic text-[#334455]">{suspect.relationship_to_victim}</div>
                 <div className="mt-3">
-                  <div className="mb-1 flex items-center justify-between text-[8px] uppercase tracking-[1.6px] text-[#334455]">
+                  <div className="mb-1 flex items-center justify-between text-detail uppercase tracking-[1.6px] text-[#334455]">
                     <span>Stress</span>
                     <span>{Math.round(stress)}%</span>
                   </div>
@@ -146,12 +146,12 @@ export default function AccusationScreen() {
       </div>
 
       <div>
-        <div className="mb-2 text-[9px] uppercase tracking-[3px] text-[#334455]">Your Reasoning</div>
+        <div className="mb-2 text-detail uppercase tracking-[3px] text-[#334455]">Your Reasoning</div>
         <textarea
           value={reasoning}
           onChange={(event) => setReasoning(event.target.value)}
           placeholder="Explain your deduction. Which clues support your accusation?"
-          className="w-full resize-none rounded-md border bg-transparent px-4 py-3 text-xs outline-none placeholder:text-[#334455]"
+          className="w-full resize-none rounded-md border bg-transparent px-4 py-3 text-body outline-none placeholder:text-[#334455]"
           style={{
             borderColor: "rgba(255,255,255,.1)",
             color: "#C8D0DC",
@@ -163,13 +163,13 @@ export default function AccusationScreen() {
       </div>
 
       {error && (
-        <div className="rounded border border-[#6A2B2B] bg-[#2A1111] px-3 py-2 text-xs text-[#E89A9A]">{error}</div>
+        <div className="rounded border border-[#6A2B2B] bg-[#2A1111] px-3 py-2 text-caption text-[#E89A9A]">{error}</div>
       )}
 
       <motion.button
         onClick={() => setConfirming(true)}
         disabled={!accusedId || submitting}
-        className="py-4 text-sm font-semibold uppercase tracking-[3px] transition-all disabled:opacity-35"
+        className="py-4 text-caption font-semibold uppercase tracking-[3px] transition-all disabled:opacity-35"
         style={{
           background: "rgba(212,168,67,.1)",
           border: "1px solid rgba(212,168,67,.4)",
@@ -194,15 +194,15 @@ export default function AccusationScreen() {
             initial={{ scale: 0.92, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <div className="mb-4 text-center text-[10px] uppercase tracking-[4px] text-[#D4A843]">Confirm Accusation</div>
-            <p className="mb-6 text-center text-sm leading-relaxed text-[#C8D0DC]">
+            <div className="mb-4 text-center text-h2 uppercase tracking-[4px] text-[#D4A843]">Confirm Accusation</div>
+            <p className="mb-6 text-center text-body leading-relaxed text-[#C8D0DC]">
               You are about to accuse <strong className="text-[#D4A843]">{accusedName}</strong>. This finalizes this run.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirming(false)}
                 disabled={submitting}
-                className="flex-1 border border-white/10 py-2.5 text-xs uppercase tracking-[2px] text-[#445566] transition-colors hover:text-[#C8D0DC]"
+                className="flex-1 border border-white/10 py-2.5 text-caption uppercase tracking-[2px] text-[#445566] transition-colors hover:text-[#C8D0DC]"
               >
                 Cancel
               </button>
@@ -211,7 +211,7 @@ export default function AccusationScreen() {
                   void confirmAccusation();
                 }}
                 disabled={submitting}
-                className="flex-1 py-2.5 text-xs font-semibold uppercase tracking-[2px] transition-all"
+                className="flex-1 py-2.5 text-caption font-semibold uppercase tracking-[2px] transition-all"
                 style={{
                   background: "rgba(212,168,67,.15)",
                   border: "1px solid rgba(212,168,67,.5)",

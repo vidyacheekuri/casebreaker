@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from pathlib import Path
 
 import aiosqlite
@@ -20,6 +21,12 @@ async def connect() -> aiosqlite.Connection:
     connection.row_factory = aiosqlite.Row
     await connection.execute("PRAGMA journal_mode=WAL;")
     await connection.execute("PRAGMA foreign_keys=ON;")
+    return connection
+
+
+def get_db() -> sqlite3.Connection:
+    """Open a synchronous SQLite connection for generation helpers."""
+    connection = sqlite3.connect(DATABASE_PATH)
     return connection
 
 
@@ -175,7 +182,10 @@ async def fetch_today_slots(
     rows = await cursor.fetchall()
     slots: list[DailySlot] = []
     for row in rows:
+        from agents.architect import _synthesize_story_fields
+
         world = WorldState.model_validate_json(row["world_json"])
+        _synthesize_story_fields(world)
         slots.append(
             DailySlot(
                 slot_id=row["slot_id"],
@@ -187,9 +197,14 @@ async def fetch_today_slots(
                 summary=row["summary"],
                 mood=row["mood"],
                 setting=row["setting"],
+                backstory=world.backstory,
+                crime_scene_detail=world.crime_scene_detail,
+                stakes=world.stakes,
+                timeline_context=world.timeline_context,
                 victim=Victim.model_validate(json.loads(row["victim_json"])),
                 suspects=world.characters,
                 evidence=world.evidence,
+                rooms=world.rooms,
                 timeline=world.timeline,
                 case_recipe=world.case_recipe,
                 generation_sources=world.generation_sources,

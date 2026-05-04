@@ -1,0 +1,146 @@
+[
+  {
+    "id": "poisoned_drink",
+    "method": "Poisoned drink",
+    "mechanism": "Toxin added to victim's beverage during evening",
+    "time_to_death": "15 minutes to 2 hours depending on poison",
+    "apparent_cause": "Sudden collapse, convulsions, or peaceful death",
+    "key_clues": ["glass residue", "unfamiliar taste description", "servant's testimony about drink preparation", "poison source"],
+    "false_leads": ["suspect seen near drinks", "victim complained of illness earlier"]
+  },
+  {
+    "id": "staged_accident",
+    "method": "Staged accident",
+    "mechanism": "Made to look like fall, drowning, or collision with object",
+    "time_to_death": "Immediate or within minutes",
+    "apparent_cause": "Head trauma, internal bleeding, asphyxiation",
+    "key_clues": ["inconsistent injuries", "unusual placement of body", "staged scene imperfections", "evidence of pre-positioning"],
+    "false_leads": ["assumption of natural clumsiness", "real recent accidents in household"]
+  },
+  {
+    "id": "suffocation",
+    "method": "Suffocation",
+    "mechanism": "Pillow, bag, or hand held over mouth/nose",
+    "time_to_death": "3-10 minutes",
+    "apparent_cause": "Asphyxiation, struggle marks, face discoloration",
+    "key_clues": ["fiber evidence", "marks on victim's arms", "position of body", "killer's hand injuries"],
+    "false_leads": ["victim had breathing difficulties", "previous fainting episodes"]
+  },
+  {
+    "id": "contaminated_food",
+    "method": "Contaminated food",
+    "mechanism": "Toxin or pathogen added to meal during preparation or serving",
+    "time_to_death": "30 minutes to 8 hours",
+    "apparent_cause": "Violent illness, organ failure, internal hemorrhage",
+    "key_clues": ["only victim ate from batch", "kitchen access records", "servant witness to preparation", "food remnants"],
+    "false_leads": ["outbreak of food poisoning affecting others", "guest ate same food earlier"]
+  },
+  {
+    "id": "exposure",
+    "method": "Deadly exposure",
+    "mechanism": "Left outside in extreme weather, locked in cold room, or exposed to elements",
+    "time_to_death": "30 minutes to several hours",
+    "apparent_cause": "Hypothermia, exposure-related shock",
+    "key_clues": ["victim's clothing unsuitable for conditions", "being locked/trapped somewhere", "timing of weather change", "witness to forced exposure"],
+    "false_leads": ["victim known to go out in bad weather", "door found open naturally"]
+  },
+  {
+    "id": "blunt_force",
+    "method": "Blunt force trauma",
+    "mechanism": "Struck with heavy object: candlestick, poker, statue, etc.",
+    "time_to_death": "Immediate or within minutes from bleeding",
+    "apparent_cause": "Head trauma, skull fracture, internal bleeding",
+    "key_clues": ["murder weapon", "blood splatter pattern", "killer's clothing/injuries", "object out of place"],
+    "false_leads": ["struggle with multiple people", "victim fell and struck head"]
+  },
+  {
+    "id": "smothering_with_object",
+    "method": "Smothering with object",
+    "mechanism": "Heavy object or furniture deliberately placed on sleeping/unconscious victim",
+    "time_to_death": "10-20 minutes",
+    "apparent_cause": "Asphyxiation, crush injuries, suffocation",
+    "key_clues": ["object in unusual location", "victim's position wrong for accident", "evidence of premeditation", "positioning of surrounding furniture"],
+    "false_leads": ["recent redecorating moved objects", "victim known to sleep heavily"]
+  },
+  {
+    "id": "razor_or_blade",
+    "method": "Sharp instrument",
+    "mechanism": "Cut to vital area: throat, wrist, or major blood vessel",
+    "time_to_death": "2-10 minutes from blood loss",
+    "apparent_cause": "Hemorrhage, exsanguination, shock",
+    "key_clues": ["missing razor/knife", "blood in unexpected places", "type of blade based on wound", "killer's hand cuts"],
+    "false_leads": ["victim known to use sharp tools", "routine medical cuts visible on body"]
+  },
+  {
+    "id": "burning",
+    "method": "Deliberate burning",
+    "mechanism": "Victim set on fire or trapped in burning structure",
+    "time_to_death": "Minutes to hours depending on extent",
+    "apparent_cause": "Smoke inhalation, severe burns, shock",
+    "key_clues": ["accelerant traces", "burn pattern inconsistency", "timing of fire", "evidence of pre-placement"],
+    "false_leads": ["accidental fire from fireplace or candle", "victim's smoking habit"]
+  },
+  {
+    "id": "electrocution",
+    "method": "Electrocution",
+    "mechanism": "Victim contacts electrical current: wet hands near light, tampered appliance, etc.",
+    "time_to_death": "Immediate",
+    "apparent_cause": "Cardiac arrest, severe burns, electrical damage",
+    "key_clues": ["tampered electrical device", "wet clothing", "scorch marks", "electrical burn pattern"],
+    "false_leads": ["faulty wiring known in household", "victim careless with electricity"]
+  },
+  {
+    "id": "ligature_strangulation",
+    "method": "Ligature strangulation",
+    "mechanism": "Cord, rope, or cloth wrapped around neck and tightened",
+    "time_to_death": "3-10 minutes",
+    "apparent_cause": "Asphyxiation, crush injuries to larynx, cerebral damage",
+    "key_clues": ["ligature material", "bruise pattern on neck", "material fibers on killer", "timing of unconsciousness"],
+    "false_leads": ["victim's neck condition from old injury", "accidental hanging scenario"]
+  },
+  {
+    "id": "overdose",
+    "method": "Forced overdose",
+    "mechanism": "Victim forced to consume toxic substance: laudanum, arsenic, chemicals, etc.",
+    "time_to_death": "15 minutes to 24 hours depending on substance",
+    "apparent_cause": "Organ failure, toxic shock, respiratory collapse",
+    "key_clues": ["substance source", "container with residue", "victim's hands show resistance marks", "access to substance by killer"],
+    "false_leads": ["victim known to use substance recreationally", "accidental spill or mixing"]
+  },
+  {
+    "id": "drowned",
+    "method": "Forced drowning",
+    "mechanism": "Head held underwater in bath, pond, or container",
+    "time_to_death": "3-10 minutes",
+    "apparent_cause": "Asphyxiation, water in lungs",
+    "key_clues": ["water location accessible", "killer's wet clothing", "bruises on victim's arms/back of head", "timing evidence"],
+    "false_leads": ["victim known to bathe regularly", "swimming/boating location"]
+  },
+  {
+    "id": "injection",
+    "method": "Lethal injection",
+    "mechanism": "Syringe or needle used to administer poison directly into bloodstream",
+    "time_to_death": "Seconds to minutes",
+    "apparent_cause": "Cardiac arrest, sudden shock, stroke-like symptoms",
+    "key_clues": ["needle mark on body", "syringe location", "medical knowledge required", "substance source"],
+    "false_leads": ["victim received medical injection recently", "victim diabetic or under treatment"]
+  },
+  {
+    "id": "misdirected_fall",
+    "method": "Engineered fall",
+    "mechanism": "Victim pushed or tripped down stairs, off balcony, or from height",
+    "time_to_death": "Immediate or within minutes",
+    "apparent_cause": "Blunt force trauma, internal injuries, fractures",
+    "key_clues": ["staircase location", "evidence of push vs. trip", "positioning of fallen body", "witness to push"],
+    "false_leads": ["victim's balance issues", "recent balance-related falls"]
+  },
+  {
+    "id": "allergen_exposure",
+    "method": "Allergen exposure",
+    "mechanism": "Victim exposed to known fatal allergen: shellfish, peanuts, bee venom, etc.",
+    "time_to_death": "Minutes to 1 hour",
+    "apparent_cause": "Anaphylactic shock, respiratory failure",
+    "key_clues": ["allergen traces", "EpiPen missing or used", "food source contaminated", "killer's knowledge of allergy"],
+    "false_leads": ["victim's own carelessness with allergen", "cross-contamination from cooking"]
+  }
+]

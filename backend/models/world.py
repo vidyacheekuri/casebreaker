@@ -16,6 +16,7 @@ class Victim(BaseModel):
     age: int
     occupation: str
     cause_of_death: str
+    time_of_death: str = ""
 
 
 class GenerationSources(BaseModel):
@@ -56,6 +57,7 @@ class Character(BaseModel):
     age: int
     occupation: str
     relationship_to_victim: str
+    motive: str = ""
     personality: str
     alibi: str
     alibi_true: bool
@@ -96,6 +98,22 @@ class Evidence(BaseModel):
     image_url: str | None = None
     image_prompt: str | None = None
     image_status: str = "idle"
+    image_version: str | None = Field(
+        default=None,
+        description="Client image pipeline version when a URL is valid (e.g. '2.0').",
+    )
+
+
+class InvestigationRoom(BaseModel):
+    """Searchable room with zero or more evidence items."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    room_id: str
+    name: str
+    description: str
+    evidence_ids: list[str] = Field(default_factory=list)
+    clue_count: int = 0
 
 
 class WorldState(BaseModel):
@@ -110,12 +128,29 @@ class WorldState(BaseModel):
     summary: str
     mood: str
     setting: str
+    backstory: str = Field(
+        default="",
+        description="2-3 sentences: the victim's life and reputation before the crime.",
+    )
+    crime_scene_detail: str = Field(
+        default="",
+        description="Atmospheric description of where and how the death was discovered.",
+    )
+    stakes: str = Field(
+        default="",
+        description="Why this murder matters—inheritance, reputation, blackmail, etc.",
+    )
+    timeline_context: str = Field(
+        default="",
+        description="Narrative of when/where the evening unfolded and key sequence.",
+    )
     victim: Victim | dict[str, Any]
     killer_id: str
     motive: str
     timeline: list[dict[str, Any]] = Field(default_factory=list)
     characters: list[Character] = Field(default_factory=list)
     evidence: list[Evidence] = Field(default_factory=list)
+    rooms: list[InvestigationRoom] = Field(default_factory=list)
     red_herrings: list[str] = Field(default_factory=list)
     case_recipe: CaseRecipe | None = None
     generation_sources: GenerationSources | None = None

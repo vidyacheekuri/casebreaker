@@ -24,6 +24,10 @@ def interrogate_suspect(
     history: list[dict[str, str]],
 ) -> dict[str, Any]:
     """Run one interrogation turn and return reply + optional detective instinct."""
+    import sys
+    print(f"[interrogate_suspect] START - suspect={suspect.name}, message_hash={hash(message)}, msg_len={len(message)}", file=sys.stderr)
+    print(f"[interrogate_suspect] Message: {message[:100]}", file=sys.stderr)
+
     world_snippets = query_world_context(
         world.chroma_collection,
         f"{suspect.name} {message}",
@@ -40,6 +44,8 @@ def interrogate_suspect(
         history=history,
         message=message,
     )
+
+    print(f"[interrogate_suspect] Reply: {reply_text[:80]}", file=sys.stderr)
 
     return {
         "character_id": suspect.character_id,
@@ -97,6 +103,7 @@ def _call_llm(
     history: list[dict[str, str]],
     message: str,
 ) -> tuple[str, str]:
+    import sys
     system_prompt = INTERROGATION_SYSTEM_PROMPT.format(
         name=suspect.name,
         age=suspect.age,
@@ -125,6 +132,11 @@ def _call_llm(
         name=suspect.name,
     )
 
+    print(f"[_call_llm] User prompt to be sent to LLM:", file=sys.stderr)
+    print(f"---USER_PROMPT_START---", file=sys.stderr)
+    print(user_prompt[:300], file=sys.stderr)
+    print(f"---USER_PROMPT_END---", file=sys.stderr)
+
     for _attempt in range(LLM_RETRY_ATTEMPTS):
         payload = generate_json(
             system=system_prompt,
@@ -133,39 +145,110 @@ def _call_llm(
             temperature=0.7,
         )
         if payload is None:
+            print(f"[_call_llm] Attempt {_attempt}: LLM returned None, retrying", file=sys.stderr)
             continue
         reply = str(payload.get("reply") or "").strip()
         tone = str(payload.get("tone") or "guarded").strip() or "guarded"
+        print(f"[_call_llm] LLM response: {reply[:100]}", file=sys.stderr)
         if not reply:
+            print(f"[_call_llm] Empty reply from LLM, using offline fallback", file=sys.stderr)
             reply = _offline_reply(suspect, message)
         reply = _sanitize_culprit_reveal(reply, world, suspect)
+        reply = _shorten_reply(reply)
+        print(f"[_call_llm] Final reply after processing: {reply[:100]}", file=sys.stderr)
         return reply, tone
 
-    return _offline_reply(suspect, message), "guarded"
+    print(f"[_call_llm] All attempts failed, using offline fallback", file=sys.stderr)
+    return _shorten_reply(_offline_reply(suspect, message)), "guarded"
 
 
 def _format_history(history: list[dict[str, str]]) -> str:
+    import sys
     if not history:
+        print(f"[_format_history] No history", file=sys.stderr)
         return "(no prior exchanges)"
+    print(f"[_format_history] History length: {len(history)}, last 6 turns will be used", file=sys.stderr)
     lines: list[str] = []
     for turn in history[-6:]:
         speaker = turn.get("speaker") or "detective"
         text = (turn.get("text") or "").strip()
         if text:
             lines.append(f"{speaker}: {text}")
-    return "\n".join(lines) if lines else "(no prior exchanges)"
+            print(f"[_format_history] Turn: {speaker}: {text[:50]}", file=sys.stderr)
+    result = "\n".join(lines) if lines else "(no prior exchanges)"
+    print(f"[_format_history] Formatted history length: {len(result)}", file=sys.stderr)
+    return result
 
 
 def _offline_reply(suspect: Character, message: str) -> str:
+    """Question-aware fallback when the LLM is unavailable or returns bad JSON."""
+    normalized = message.lower()
+    first_knowledge = suspect.knowledge[0] if suspect.knowledge else ""
+
+    if _mentions_any(normalized, ("alibi", "where were", "where was", "walk me through")):
+        return f"{_clean_sentence(suspect.alibi)} That is what I remember."
+
+    if _mentions_any(normalized, ("motive", "reason", "harm", "kill", "hurt")):
+        if suspect.is_killer:
+            return "I had problems, yes. That does not mean I killed anyone."
+        return "I had no reason to kill anyone. I may have been upset, but not like that."
+
+    if _mentions_any(normalized, ("relationship", "know the victim", "victim", "harlow", "eleanor")):
+        return f"{_clean_sentence(suspect.relationship_to_victim)} It was not always easy between us."
+
+    if _mentions_any(normalized, ("secret", "hiding", "leaving out", "not saying", "careful")):
+        return f"I left out something private. {_clean_sentence(suspect.secret)}"
+
+    if _mentions_any(normalized, ("saw", "see", "heard", "notice", "clue", "evidence")):
+        if first_knowledge:
+            return _clean_sentence(first_knowledge)
+        return "I noticed only small things. I did not understand them then."
+
+    if _mentions_any(normalized, ("who", "killer", "guilty", "culprit", "did it")):
+        return "I will not guess a name. Ask me what I saw, not who to blame."
+
     if suspect.is_killer:
-        return (
-            f"I already told you where I was. I don't see what {message!r} "
-            "has to do with me."
-        )
-    return (
-        f"I want this resolved as much as you do. Ask plainly what you need, "
-        f"and I'll tell you what {suspect.name.split()[0]} actually saw."
-    )
+        return "I have answered what I can. Do not twist my words into a confession."
+    if first_knowledge:
+        return _clean_sentence(first_knowledge)
+    return f"I can answer that, but only from my side. {_clean_sentence(suspect.alibi)}"
+
+
+def _mentions_any(text: str, needles: tuple[str, ...]) -> bool:
+    return any(needle in text for needle in needles)
+
+
+def _clean_sentence(value: str) -> str:
+    cleaned = " ".join(value.split()).strip()
+    if not cleaned:
+        return ""
+    return cleaned if cleaned.endswith((".", "!", "?")) else f"{cleaned}."
+
+
+def _shorten_reply(reply: str, max_words: int = 38) -> str:
+    """Keep suspect replies brief even if the model rambles."""
+    cleaned = " ".join(reply.split())
+    if not cleaned:
+        return cleaned
+
+    sentences: list[str] = []
+    current = ""
+    for char in cleaned:
+        current += char
+        if char in ".!?":
+            sentences.append(current.strip())
+            current = ""
+            if len(sentences) >= 2:
+                break
+    if current.strip() and len(sentences) < 2:
+        sentences.append(current.strip())
+
+    shortened = " ".join(sentences).strip() or cleaned
+    words = shortened.split()
+    if len(words) <= max_words:
+        return shortened
+
+    return " ".join(words[:max_words]).rstrip(" ,;:") + "."
 
 
 def _sanitize_culprit_reveal(reply: str, world: WorldState, suspect: Character) -> str:
